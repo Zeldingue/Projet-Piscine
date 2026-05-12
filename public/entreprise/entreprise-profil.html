@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>StageFlow - Profil Entreprise</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Chemins corrigés avec un / au début -->
+    <link rel="stylesheet" href="entreprise.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <!-- NAVBAR DYNAMIQUE (Identique sur tout le site) -->
+    <nav class="navbar">
+      <a href="/index.html" class="logo">StageFlow</a>
+
+      <!-- C'est ici que le JS va injecter les liens de l'entreprise -->
+      <ul class="nav-links"></ul>
+
+      <!-- C'est ici que le JS va injecter "Nom Entreprise 🏢" -->
+      <a href="/entreprise/entreprise-profil.html" class="btn-account"> </a>
+    </nav>
+
+    <div class="container">
+      <h1 style="margin-bottom: 2rem">Informations de l'entreprise</h1>
+      <form action="entreprise-dashboard.html">
+        <div class="form-group">
+          <label>Nom de l'entreprise</label>
+          <!-- Correction du > en trop ici -->
+          <input type="text" class="form-control" value="TechCorp Solutions" />
+        </div>
+
+        <div style="display: flex; gap: 1.5rem">
+          <div class="form-group" style="flex: 1">
+            <label>SIRET</label>
+            <!-- Correction du > en trop ici -->
+            <input type="text" class="form-control" value="12345678901234" />
+          </div>
+          <div class="form-group" style="flex: 1">
+            <label>Secteur</label>
+            <!-- Correction du > en trop ici -->
+            <input
+              type="text"
+              class="form-control"
+              value="Développement Logiciel"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description publique</label>
+          <textarea class="form-control">
+Leader européen dans le développement d'outils...</textarea
+          >
+        </div>
+
+        <button type="submit" class="btn-save">Mettre à jour</button>
+      </form>
+
+      <!-- BOUTON DE DÉCONNEXION -->
+      <div style="margin-top: 2rem; text-align: center">
+        <a href="/api/logout" class="btn-deconnexion">
+          <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
+        </a>
+      </div>
+    </div>
+
+    <!-- FOOTER DYNAMIQUE -->
+    <footer id="footer-dynamique" class="site-footer"></footer>
+
+    <!-- Chemin corrigé avec un / au début -->
+    <script src="/script.js"></script>
+  </body>
+</html>

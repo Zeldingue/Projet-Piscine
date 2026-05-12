@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>StageFlow - Tableau de bord Étudiant</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="etudiant.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <!-- LA NAVBAR COMMUNE -->
+<nav class="navbar">
+  <a href="/index.html" class="logo">StageFlow</a>
+  
+  <!-- C'est ici que le JS va injecter les 3 liens -->
+  <ul class="nav-links">
+  </ul>
+  
+  <!-- C'est ici que le JS va injecter "Franc 👤" -->
+  <a href="/etudiant/etudiant-profil.html" class="btn-account">
+  </a>
+</nav>
+    </nav>
+    <div class="container">
+      <h1>Bonjour, Aylan 👋</h1>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Candidatures en attente</h3>
+          <div class="number">2</div>
+        </div>
+        <div class="stat-card">
+          <h3>Entretiens programmés</h3>
+          <div class="number">1</div>
+        </div>
+        <div class="stat-card">
+          <h3>Stages archivés</h3>
+          <div class="number">1</div>
+        </div>
+      </div>
+      <h2 style="margin-bottom: 1rem">Mes dernières candidatures</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Offre</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>WebStudio</strong></td>
+            <td>Intégrateur Web</td>
+            <td>15/04</td>
+            <td><span class="status attente">En attente</span></td>
+            <td>
+              <a href="etudiant-offre-detail.html" style="color: #586b33"
+                >Voir l'offre</a
+              >
+            </td>
+          </tr>
+          <tr>
+            <td><strong>TechCorp</strong></td>
+            <td>Développeur Node.js</td>
+            <td>10/04</td>
+            <td><span class="status accepte">Accepté</span></td>
+            <td>
+              <a href="etudiant-offre-detail.html" style="color: #586b33"
+                >Voir l'offre</a
+              >
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- FOOTER DYNAMIQUE -->
+<footer id="footer-dynamique" class="site-footer"></footer>
+    <script src="../script.js"></script>
+  </body>
+</html>

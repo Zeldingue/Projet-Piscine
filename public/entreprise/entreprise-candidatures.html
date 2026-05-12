@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Candidatures - Espace Entreprise</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="entreprise.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <!-- NAVBAR DYNAMIQUE (Identique sur tout le site) -->
+    <nav class="navbar">
+      <a href="/index.html" class="logo">StageFlow</a>
+
+      <!-- C'est ici que le JS va injecter les liens de l'entreprise -->
+      <ul class="nav-links"></ul>
+
+      <!-- C'est ici que le JS va injecter "Nom Entreprise 🏢" -->
+      <a href="/entreprise/entreprise-profil.html" class="btn-account"> </a>
+    </nav>
+    <div class="container">
+      <div class="header-info">
+        <div style="color: #586b33; font-weight: 600">Offre #001</div>
+        <h2>Développeur Back-End Node.js</h2>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Candidat</th>
+            <th>Formation</th>
+            <th>Date</th>
+            <th>CV</th>
+            <th>Statut</th>
+            <th>Décision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>Alice Martin</strong><br /><span
+                style="font-size: 0.85rem; color: #666"
+                >alice@email.com</span
+              >
+            </td>
+            <td>BTS SIO SLAM</td>
+            <td>12/04</td>
+            <td><a href="#" class="btn-action btn-view">Voir CV</a></td>
+            <td>
+              <span style="font-weight: 600; color: #856404">En attente</span>
+            </td>
+            <td>
+              <a href="#" class="btn-action btn-accept">Accepter</a>
+              <a href="#" class="btn-action btn-reject">Refuser</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- FOOTER DYNAMIQUE -->
+    <footer id="footer-dynamique" class="site-footer"></footer>
+    <script src="../script.js"></script>
+  </body>
+</html>

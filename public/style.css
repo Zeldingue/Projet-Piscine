@@ -1,0 +1,869 @@
+/* ==========================================================================
+   STAGEFLOW - FEUILLE DE STYLE GLOBALE
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. RESET & TYPOGRAPHIE DE BASE
+   -------------------------------------------------------------------------- */
+body {
+  background-color: #f9f9f9;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Force le footer en bas */
+}
+
+a {
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. CONTAINERS & LAYOUT
+   -------------------------------------------------------------------------- */
+.container {
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 0 2rem;
+  width: 100%;
+}
+.row {
+  display: flex;
+  gap: 1.5rem;
+}
+.col {
+  flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   3. NAVBARS (Base, Entreprise, Admin)
+   -------------------------------------------------------------------------- */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 4rem;
+  background: white;
+  border-bottom: 1px solid #eaeaea;
+}
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111;
+}
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+.nav-links a {
+  color: #666;
+  font-weight: 500;
+}
+.nav-links a.active,
+.nav-links a:hover {
+  color: #586b33;
+  font-weight: 600;
+}
+
+.nav-links-active {
+  color: #000000;
+  font-weight: 600;
+}
+
+/* Surcharge Entreprise */
+.navbar.entreprise-nav {
+  background: #111;
+  color: white;
+  border-bottom: none;
+}
+.navbar.entreprise-nav .logo {
+  color: white;
+}
+.navbar.entreprise-nav .nav-links a {
+  color: #aaa;
+}
+.navbar.entreprise-nav .nav-links a.active,
+.navbar.entreprise-nav .nav-links a:hover {
+  color: white;
+}
+
+/* Surcharge Admin */
+.navbar.admin-nav {
+  background: #6b2424;
+  color: white;
+  border-bottom: none;
+}
+.navbar.admin-nav .logo {
+  color: white;
+}
+.navbar.admin-nav .nav-links a {
+  color: #f0b9b9;
+}
+.navbar.admin-nav .nav-links a.active,
+.navbar.admin-nav .nav-links a:hover {
+  color: white;
+}
+
+/* --------------------------------------------------------------------------
+   4. FORMULAIRES & BOUTONS
+   -------------------------------------------------------------------------- */
+.btn-account {
+  background-color: #586b33;
+  color: white;
+  text-decoration: none;
+  padding: 0.7rem 1.8rem;
+  border-radius: 50px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: background-color 0.3s;
+  display: inline-block;
+}
+
+.btn-account:hover {
+  background-color: #455527;
+}
+
+.btn-submit {
+  background: #586b33;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  display: inline-block;
+}
+.btn-submit:hover {
+  background: #455527;
+}
+
+.btn-deconnexion {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* --------------------------------------------------------------------------
+   5. TABLEAUX DE DONNÉES GLOBAUX
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   6. MODALES & UPLOAD (Zone de dépôt)
+   -------------------------------------------------------------------------- */
+
+/* Upload Esthétique */
+.custom-file-upload {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+.hidden-input {
+  display: none;
+}
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: 0.3s;
+  text-align: center;
+}
+.upload-zone:hover {
+  border-color: #586b33;
+  background-color: #f9faf7;
+}
+.upload-zone.has-file {
+  border-style: solid;
+  border-color: #586b33;
+  background-color: #f2f5ed;
+}
+.upload-icon {
+  font-size: 2.5rem;
+  color: #586b33;
+  margin-bottom: 1rem;
+  transition: transform 0.3s;
+}
+.upload-zone:hover .upload-icon {
+  transform: translateY(-5px);
+}
+
+/* --------------------------------------------------------------------------
+   8. SPÉCIFIQUE : ENTREPRISE
+   -------------------------------------------------------------------------- */
+.header-info {
+  margin-bottom: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #eaeaea;
+}
+
+/* --------------------------------------------------------------------------
+   9. SPÉCIFIQUE : ADMIN
+   -------------------------------------------------------------------------- */
+.role-badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.role-etudiant {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.role-entreprise {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+/* 3. Thème Admin (Rouge foncé avec texte blanc) */
+.navbar.navbar-admin {
+  background-color: #6b2424;
+  border-bottom: none;
+}
+.navbar.navbar-admin .logo,
+.navbar.navbar-admin .nav-links a {
+  color: #ffffff;
+}
+.navbar.navbar-admin .nav-links a:hover,
+.navbar.navbar-admin .nav-links a.active {
+  color: #f0b9b9; /* Rouge clair/rosé pour le survol et la page active */
+  /* Optionnel : petite barre sous le lien actif */
+  border-bottom: 2px solid #f0b9b9;
+}
+
+/* Surcharge du bouton "Mon compte" pour qu'il s'intègre bien au fond rouge */
+.navbar.navbar-admin .btn-account {
+  background-color: #4a1515; /* Rouge encore plus foncé */
+  color: #ffffff;
+}
+.navbar.navbar-admin .btn-account:hover {
+  background-color: #2d0d0d;
+}
+
+/* --------------------------------------------------------------------------
+   10. FOOTERS (Les 3 versions)
+   -------------------------------------------------------------------------- */
+/* Base commune des footers */
+.site-footer-etudiant,
+.site-footer-entreprise,
+.site-footer-admin {
+  color: #fff;
+  padding: 4rem 2rem 1.5rem;
+  margin-top: auto;
+}
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.footer-col {
+  flex: 1;
+  min-width: 180px;
+}
+.brand-col {
+  min-width: 250px;
+}
+.footer-logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+.footer-col h4 {
+  font-size: 1.05rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+  color: #f4f4f4;
+}
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+}
+.footer-col ul li {
+  margin-bottom: 0.8rem;
+}
+.footer-col ul li a {
+  color: #888;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+/* Design spécifique Footer Etudiant/Public */
+.site-footer-etudiant {
+  background-color: #111;
+}
+.site-footer-etudiant p {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.site-footer-etudiant ul li a:hover {
+  color: #586b33;
+}
+.site-footer-etudiant .footer-bottom {
+  max-width: 1200px;
+  margin: 3rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid #333;
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Design spécifique Footer Entreprise */
+.site-footer-entreprise {
+  background-color: #111;
+}
+.site-footer-entreprise p {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.site-footer-entreprise ul li a:hover {
+  color: #586b33;
+}
+.site-footer-entreprise .footer-bottom {
+  max-width: 1200px;
+  margin: 3rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid #333;
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Design spécifique Footer Admin */
+.site-footer-admin {
+  background-color: #0a0a0a;
+  border-top: 2px solid #6b2424;
+}
+.site-footer-admin p {
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.site-footer-admin ul li a:hover {
+  color: #f0b9b9;
+}
+.site-footer-admin .footer-bottom {
+  max-width: 1200px;
+  margin: 3rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid #222;
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   CHARTE GRAPHIQUE - THEMES DE LA NAVBAR
+   ========================================================================== */
+
+/* 1. Thème par défaut / Étudiant (Blanc avec texte sombre) */
+.navbar.navbar-etudiant {
+  background-color: #ffffff;
+  border-bottom: 1px solid #eaeaea; /* Petite ligne grise en bas pour délimiter */
+}
+/* On met le texte en foncé pour qu'il soit visible sur le blanc */
+.navbar.navbar-etudiant .logo,
+.navbar.navbar-etudiant .nav-links a {
+  color: #333333;
+}
+.navbar.navbar-etudiant .nav-links a:hover,
+.navbar.navbar-etudiant .nav-links a.active {
+  color: #586b33; /* Ton vert pour indiquer la page active */
+  border-bottom-color: #586b33;
+}
+
+/* 2. Thème Entreprise (Noir avec texte blanc) */
+.navbar.navbar-entreprise {
+  background-color: #111111;
+}
+.navbar.navbar-entreprise .logo,
+.navbar.navbar-entreprise .nav-links a {
+  color: #ffffff;
+}
+.navbar.navbar-entreprise .nav-links a:hover,
+.navbar.navbar-entreprise .nav-links a.active {
+  color: #a3b879; /* Un vert un peu plus clair pour bien ressortir sur le noir */
+  border-bottom-color: #a3b879;
+}
+
+/* Rappel pour le footer admin */
+.site-footer-admin {
+  background-color: #0a0a0a; /* Noir très sombre */
+  border-top: 3px solid #6b2424; /* La barre rouge du haut */
+  color: #fff;
+}
+
+.site-footer-admin .footer-logo {
+  font-weight: bold;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+}
+
+.site-footer-admin p {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.site-footer-admin h4 {
+  color: #fff;
+  border-bottom: none; /* On reste sobre comme sur l'image */
+}
+
+.site-footer-admin ul li a {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.site-footer-admin ul li a:hover {
+  color: #ff4d4d; /* Survol rouge */
+}
+
+.site-footer-admin .footer-bottom {
+  border-top: 1px solid #222;
+  color: #666;
+  font-size: 0.8rem;
+}
+/* --------------------------------------------------------------------------
+   11. SPÉCIFIQUE : ACCUEIL (index.html)
+   -------------------------------------------------------------------------- */
+.hero {
+  text-align: center;
+  padding: 8rem 2rem 6rem;
+}
+.hero h1 {
+  font-size: 5rem;
+  font-weight: 600;
+  letter-spacing: -2.5px;
+  margin-bottom: 1rem;
+}
+.hero h2 {
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #444;
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.3;
+}
+.hero-btns {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.btn-outline {
+  border: 1px solid #111;
+  color: #111;
+  padding: 0.7rem 1.8rem;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.btn-outline:hover {
+  background-color: #111;
+  color: white;
+}
+
+.features-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 4rem 6rem;
+}
+.divider {
+  height: 1px;
+  background-color: #eaeaea;
+  width: 100%;
+  margin-bottom: 4rem;
+}
+.features {
+  display: flex;
+  justify-content: space-between;
+  gap: 4rem;
+}
+.feature-card {
+  flex: 1;
+}
+.icon-container {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #586b33;
+}
+.feature-card h3 {
+  font-family: "Lora", serif;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+.feature-card p {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.how-it-works {
+  background-color: #f9f9f9;
+  padding: 6rem 4rem;
+  text-align: center;
+}
+.how-it-works h2 {
+  font-size: 2.5rem;
+  letter-spacing: -1px;
+  margin-bottom: 4rem;
+}
+.steps {
+  display: flex;
+  max-width: 1000px;
+  margin: 0 auto;
+  gap: 3rem;
+  text-align: left;
+}
+.step {
+  flex: 1;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+.step-num {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+.step h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.step p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* --------------------------------------------------------------------------
+   12. SPÉCIFIQUE : CONNEXION & INSCRIPTION
+   -------------------------------------------------------------------------- */
+/* Conteneurs principaux */
+.login-container,
+.register-container {
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  margin: auto; /* Centre la boîte verticalement et horizontalement */
+  margin-top: 5vh;
+  margin-bottom: 5vh;
+}
+.login-container {
+  max-width: 400px;
+  text-align: center;
+}
+.register-container {
+  max-width: 500px;
+  text-align: center;
+}
+
+/* Logo dans les formulaires */
+.login-container .logo,
+.register-container .logo {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: #111;
+  display: block;
+  margin-bottom: 2rem;
+}
+
+/* Sélecteur de rôle (Boutons Étudiant / Entreprise) */
+.role-selector {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 0.3rem;
+  margin-bottom: 2rem;
+}
+.role-btn {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  color: #666;
+  transition: 0.3s;
+}
+.role-btn.active {
+  background: white;
+  color: #111;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Sections dynamiques (JS) */
+.form-section {
+  display: none;
+  text-align: left;
+}
+.form-section.active {
+  display: block;
+  animation: fadeInAuth 0.3s ease;
+}
+@keyframes fadeInAuth {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Inputs spécifiques aux formulaires d'authentification */
+.input-group {
+  margin-bottom: 1.2rem;
+  flex: 1;
+  text-align: left;
+}
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  color: #555;
+}
+.input-group input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: 0.2s;
+}
+.input-group input:focus {
+  border-color: #586b33;
+}
+
+/* Footer du formulaire (ex: "Déjà inscrit ?") */
+.form-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+.form-footer a {
+  color: #111;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   SPÉCIFIQUE : RECHERCHE D'OFFRES (recherche.html) - Version Maquette
+   ========================================================================== */
+
+/* --- HEADER DE RECHERCHE (Zone noire) --- */
+.search-hero {
+  background-color: #111;
+  padding: 4rem 2rem 5rem;
+  text-align: center;
+}
+.search-hero h1 {
+  color: white;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2.5rem;
+  letter-spacing: -0.5px;
+}
+
+/* La barre de recherche "Pilule" */
+.search-pill {
+  background: white;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  padding: 0.4rem;
+}
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 0.9rem;
+  outline: none;
+  background: transparent;
+}
+.search-input::placeholder {
+  color: #888;
+}
+
+.search-divider {
+  width: 1px;
+  height: 30px;
+  background-color: #eaeaea;
+}
+
+.btn-search {
+  background-color: #586b33;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+.btn-search:hover {
+  background-color: #455527;
+}
+
+/* --- GRILLE DE RÉSULTATS (Cartes) --- */
+.results-section {
+  max-width: 1000px;
+  margin: 3rem auto 6rem;
+  padding: 0 2rem;
+  flex: 1;
+}
+.results-section h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #111;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 colonnes */
+  gap: 1.5rem;
+}
+
+/* Design d'une carte d'offre */
+.job-card {
+  background: white;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  border-color: #ddd;
+}
+
+.job-company {
+  color: #586b33;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.job-title {
+  font-family: "Lora", serif; /* Police à empattement comme sur l'image */
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+.job-details {
+  color: #888;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.btn-view-offer {
+  background-color: #f4f4f4;
+  color: #111;
+  text-align: center;
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-top: auto; /* Pousse le bouton tout en bas */
+  transition: 0.2s;
+  text-decoration: none;
+  display: block;
+}
+.btn-view-offer:hover {
+  background-color: #eaeaea;
+}
+
+/* Ajustement pour que la navbar de la maquette colle avec la zone noire */
+.navbar {
+  border-bottom: none; /* Enlève la bordure grise sous la navbar pour une transition plus clean vers le noir */
+}
+
+/* ==========================================================================
+   MODALE DE CANDIDATURE
+   ========================================================================== */
+.modal-overlay {
+  display: none; /* Cachée par défaut */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.active {
+  display: flex; /* S'affiche quand le JS ajoute la classe 'active' */
+}
+.modal-content {
+  background: white;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  padding: 2rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 1rem;
+}
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+.btn-close-modal:hover {
+  color: #111;
+}

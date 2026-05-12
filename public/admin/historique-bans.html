@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StageFlow ADMIN - Historique des bans</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="../index.html" class="logo">StageFlow</a>
+      <ul class="nav-links"></ul>
+      <a href="/admin/admin-profil.html" class="btn-account"></a>
+    </nav>
+
+    <div class="container" style="min-height: 60vh">
+      <div style="margin-bottom: 2rem">
+        <h1 style="font-size: 1.8rem">
+          <i class="fa-solid fa-gavel" style="color: #6b2424"></i> Historique
+          des bannissements
+        </h1>
+        <p style="color: #666">
+          Consultez la liste des utilisateurs exclus de la plateforme.
+        </p>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Utilisateur / Entreprise</th>
+            <th>Type</th>
+            <th>Motif</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>14 Mai 2026</td>
+            <td>
+              <strong>Aylan D.</strong><br /><small>aylan@ecole.fr</small>
+            </td>
+            <td><span class="role-badge role-etudiant">Étudiant</span></td>
+            <td>Faux documents (Attestation falsifiée)</td>
+            <td><span class="badge badge-permanent">Définitif</span></td>
+            <td>
+              <button class="btn-action" title="Voir le dossier">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn-action" title="Annuler le ban (Débannir)">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>10 Mai 2026</td>
+            <td>
+              <strong>Arnaque SARL</strong><br /><small
+                >contact@arnaque.fr</small
+              >
+            </td>
+            <td><span class="role-badge role-entreprise">Entreprise</span></td>
+            <td>Offres frauduleuses / Travail dissimulé</td>
+            <td><span class="badge badge-permanent">Définitif</span></td>
+            <td>
+              <button class="btn-action" title="Voir le dossier">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn-action" title="Annuler le ban (Débannir)">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>02 Mai 2026</td>
+            <td>
+              <strong>Lucas M.</strong><br /><small>lucas@ecole.fr</small>
+            </td>
+            <td><span class="role-badge role-etudiant">Étudiant</span></td>
+            <td>Propos injurieux envers un recruteur</td>
+            <td><span class="badge badge-tempo">Tempo (15j)</span></td>
+            <td>
+              <button class="btn-action" title="Voir le dossier">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn-action" title="Annuler le ban (Débannir)">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer id="footer-dynamique"></footer>
+
+    <script src="/script.js"></script>
+  </body>
+</html>

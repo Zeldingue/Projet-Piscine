@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mon Profil - StageFlow</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="etudiant.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <!-- LA NAVBAR COMMUNE -->
+    <nav class="navbar">
+      <a href="/index.html" class="logo">StageFlow</a>
+
+      <!-- C'est ici que le JS va injecter les 3 liens -->
+      <ul class="nav-links"></ul>
+
+      <!-- C'est ici que le JS va injecter "Franc 👤" -->
+      <a href="/etudiant/etudiant-profil.html" class="btn-account"> </a>
+    </nav>
+    <div class="container">
+      <h1>Mes informations personnelles</h1>
+
+      <form action="#" class="profil-form">
+        <div style="display: flex; gap: 1.5rem">
+          <div class="form-group" style="flex: 1">
+            <label>Prénom</label>
+            <input type="text" id="profil-prenom" class="form-control" />
+          </div>
+          <div class="form-group" style="flex: 1">
+            <label>Nom</label>
+            <input type="text" id="profil-nom" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email de contact</label>
+          <input type="email" id="profil-email" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Numéro de téléphone</label>
+          <input type="text" id="profil-telephone" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn-submit">
+          Sauvegarder les modifications
+        </button>
+      </form>
+      <h2
+        style="
+          margin-top: 3rem;
+          margin-bottom: 1.5rem;
+          font-size: 1.5rem;
+          border-bottom: 2px solid #eaeaea;
+          padding-bottom: 0.5rem;
+        "
+      >
+        Sécurité
+      </h2>
+
+      <form id="form-mdp" class="profil-form">
+        <div class="form-group">
+          <label>Ancien mot de passe</label>
+          <input
+            type="password"
+            id="ancien-mdp"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div style="display: flex; gap: 1.5rem">
+          <div class="form-group" style="flex: 1">
+            <label>Nouveau mot de passe</label>
+            <input
+              type="password"
+              id="nouveau-mdp"
+              class="form-control"
+              required
+              minlength="6"
+            />
+          </div>
+          <div class="form-group" style="flex: 1">
+            <label>Confirmer le nouveau mot de passe</label>
+            <input
+              type="password"
+              id="confirm-mdp"
+              class="form-control"
+              required
+              minlength="6"
+            />
+          </div>
+        </div>
+
+        <div
+          id="msg-mdp"
+          style="margin-bottom: 1rem; font-weight: 500; font-size: 0.9rem"
+        ></div>
+
+        <button type="submit" class="btn-submit" style="background-color: #111">
+          Mettre à jour le mot de passe
+        </button>
+      </form>
+
+      <div style="margin-top: 2rem; text-align: center">
+        <a href="/api/logout" class="btn-deconnexion">
+          <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
+        </a>
+      </div>
+    </div>
+    <script src="../script.js"></script>
+  </body>
+</html>

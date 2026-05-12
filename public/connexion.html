@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StageFlow - Connexion</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="etudiant/etudiant.css" />
+    <script src="script.js"></script>
+    <!-- Ajout de ton script global pour setCharteGraphique -->
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="index.html" class="logo">StageFlow</a>
+      <ul class="nav-links">
+        <li><a href="recherche.html">Recherche d'Offres</a></li>
+        <li><a href="connexion.html">Mes Candidatures</a></li>
+        <li><a href="connexion.html">Carnet de stages</a></li>
+      </ul>
+      <a href="connexion.html" class="btn-account"
+        >Mon Compte <i class="fa-solid fa-arrow-right"></i
+      ></a>
+    </nav>
+    <div class="login-container">
+      <a
+        href="index.html"
+        class="logo"
+        style="
+          text-align: center;
+          display: block;
+          margin-bottom: 2rem;
+          font-size: 2rem;
+        "
+        >StageFlow</a
+      >
+
+      <!-- Sélecteur de rôle (Sert principalement pour le design) -->
+      <div class="role-selector">
+        <button
+          class="role-btn active"
+          id="btn-login-etudiant"
+          onclick="switchLoginRole('etudiant')"
+        >
+          Je suis un Étudiant
+        </button>
+        <button
+          class="role-btn"
+          id="btn-login-entreprise"
+          onclick="switchLoginRole('entreprise')"
+        >
+          Je suis une Entreprise
+        </button>
+      </div>
+
+      <!-- LE FORMULAIRE INTERCEPTÉ PAR JS (Suppression de action et method) -->
+      <form id="form-login">
+        <div class="input-group">
+          <label>Adresse Email</label>
+          <input
+            type="email"
+            id="login-email"
+            name="email"
+            placeholder="votre@email.com"
+            required
+          />
+        </div>
+
+        <div class="input-group">
+          <label>Mot de passe</label>
+          <input
+            type="password"
+            id="login-mdp"
+            name="mdp"
+            placeholder="Votre mot de passe"
+            required
+          />
+        </div>
+
+        <!-- Le bouton de soumission -->
+        <button
+          type="submit"
+          id="btn-submit-login"
+          class="btn-submit"
+          style="width: 100%"
+        >
+          Se connecter
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Pas encore de compte ? <a href="register.html">S'inscrire</a>
+      </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+      // 1. Gestion de l'animation des boutons et du thème
+      function switchLoginRole(role) {
+        document
+          .getElementById("btn-login-etudiant")
+          .classList.remove("active");
+        document
+          .getElementById("btn-login-entreprise")
+          .classList.remove("active");
+        document.getElementById("btn-login-" + role).classList.add("active");
+
+        const submitBtn = document.getElementById("btn-submit-login");
+        if (role === "entreprise") {
+          submitBtn.style.background = "#111"; // Vert Entreprise
+        } else {
+          submitBtn.style.background = "#586b33"; // Noir Étudiant
+        }
+
+        if (typeof setCharteGraphique === "function") {
+          setCharteGraphique(role);
+        }
+      }
+
+      // 2. Interception de la soumission pour afficher une alerte (AJAX)
+      document
+        .getElementById("form-login")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const email = document.getElementById("login-email").value;
+          const mdp = document.getElementById("login-mdp").value;
+
+          try {
+            const response = await fetch("/api/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email, mdp: mdp }),
+            });
+
+            const result = await response.json();
+
+            // --- C'EST ICI QUE TOUT CHANGE ---
+            if (result.success) {
+              alert("✅ " + result.message);
+
+              // 1. On demande au navigateur la page d'où vient l'utilisateur
+              let pagePrecedente = document.referrer;
+
+              // 2. Sécurité : On ne veut pas le renvoyer vers la page d'inscription s'il vient de s'inscrire !
+              // On évite aussi de le renvoyer sur la page de connexion elle-même.
+              if (
+                !pagePrecedente ||
+                pagePrecedente.includes("register.html") ||
+                pagePrecedente.includes("connexion.html")
+              ) {
+                // S'il n'y a pas d'historique valide, on utilise le lien par défaut envoyé par ton Node.js
+                window.location.href = result.redirect || "/index.html";
+              } else {
+                // Sinon, on le téléporte sur son ancienne page !
+                window.location.href = pagePrecedente;
+              }
+            } else {
+              alert("❌ " + result.message);
+            }
+            // ---------------------------------
+          } catch (error) {
+            alert("❌ Impossible de joindre le serveur.");
+            console.error(error);
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StageFlow - Recherche d'Offres</title>
+    <!-- Polices Inter (sans-serif) et Lora (serif pour les titres des offres) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="etudiant/etudiant.css" />
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <a href="index.html" class="logo">StageFlow</a>
+      <ul class="nav-links">
+        <li>
+          <a href="recherche.html">Recherche d'Offres</a>
+        </li>
+        <li><a href="connexion.html">Mes Candidatures</a></li>
+        <li><a href="connexion.html">Carnet de stages</a></li>
+      </ul>
+      <a href="connexion.html" class="btn-account">
+        Mon Compte
+        <i class="fa-solid fa-arrow-right" style="margin-left: 5px"></i>
+      </a>
+    </nav>
+
+    <!-- ZONE DE RECHERCHE NOIRE -->
+    <header class="search-hero">
+      <h1>Trouvez votre prochain stage</h1>
+
+      <div class="search-pill">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Métier, mots-clés, ou entreprise..."
+        />
+        <div class="search-divider"></div>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Ville ou code postal..."
+        />
+        <button class="btn-search">Rechercher</button>
+      </div>
+    </header>
+
+    <!-- GRILLE DE RÉSULTATS -->
+    <
+    <div class="results-section">
+      <h2>Offres de stages récentes</h2>
+
+      <div class="cards-grid">
+        <p>Chargement des offres en cours...</p>
+      </div>
+    </div>
+
+    <!-- FOOTER PUBLIC -->
+    <footer class="site-footer-etudiant">
+      <div class="footer-content">
+        <div class="footer-col brand-col">
+          <div class="footer-logo">StageFlow</div>
+          <p>
+            La plateforme de référence centralisant les recherches et les offres
+            de stages pour les étudiants du BTS SIO.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="index.html">Accueil</a></li>
+            <li><a href="recherche.html">Recherche d'offres</a></li>
+            <li><a href="connexion.html">Mon espace connecté</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Informations</h4>
+          <ul>
+            <li><a href="#">Mentions légales</a></li>
+            <li><a href="#">Politique de confidentialité</a></li>
+            <li><a href="#">Nous contacter</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          &copy; 2026 StageFlow. Projet BTS SIO - SLAM. Réalisé par Aylan Saidi.
+        </p>
+      </div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>

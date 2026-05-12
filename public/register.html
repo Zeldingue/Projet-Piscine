@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StageFlow - Inscription</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="etudiant/etudiant.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="index.html" class="logo">StageFlow</a>
+      <ul class="nav-links">
+        <li><a href="recherche.html">Recherche d'Offres</a></li>
+        <li><a href="connexion.html">Mes Candidatures</a></li>
+        <li><a href="connexion.html">Carnet de stages</a></li>
+      </ul>
+      <a href="connexion.html" class="btn-account"
+        >Mon Compte <i class="fa-solid fa-arrow-right"></i
+      ></a>
+    </nav>
+    <div class="register-container">
+      <a href="index.html" class="logo">StageFlow</a>
+
+      <div class="role-selector">
+        <button
+          class="role-btn active"
+          id="btn-reg-etudiant"
+          onclick="switchRegRole('etudiant')"
+        >
+          Je suis un Étudiant
+        </button>
+        <button
+          class="role-btn"
+          id="btn-reg-entreprise"
+          onclick="switchRegRole('entreprise')"
+        >
+          Je suis une Entreprise
+        </button>
+      </div>
+
+      <div id="form-reg-etudiant" class="form-section active">
+        <form action="/api/register/etudiant" method="POST">
+          <!-- IDENTITÉ & SCOLARITÉ -->
+          <div class="row">
+            <div class="input-group">
+              <label>Prénom *</label>
+              <input
+                type="text"
+                name="prenom_etudiant"
+                placeholder="Ex: Aylan"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Nom *</label>
+              <input
+                type="text"
+                name="nom_etudiant"
+                placeholder="Ex: Saidi"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Date de naissance</label>
+              <input type="date" name="date_naissance" />
+            </div>
+            <div class="input-group">
+              <label>Numéro INE</label>
+              <input
+                type="text"
+                name="num_INE"
+                placeholder="11 caractères"
+                maxlength="11"
+              />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Classe</label>
+              <input type="text" name="classe" placeholder="Ex: SIO2" />
+            </div>
+            <div class="input-group">
+              <label>Formation</label>
+              <input
+                type="text"
+                name="formation_etudiant"
+                placeholder="Ex: BTS SIO SLAM"
+              />
+            </div>
+          </div>
+
+          <!-- CONTACT & ADRESSE -->
+          <div class="row">
+            <div class="input-group">
+              <label>Email Académique *</label>
+              <input
+                type="email"
+                name="email_academique"
+                placeholder="prenom.nom@ecole-bts.fr"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Email Personnel</label>
+              <input
+                type="email"
+                name="email_etudiant"
+                placeholder="perso@email.com"
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Téléphone</label>
+            <input
+              type="tel"
+              name="num_telephone"
+              placeholder="Ex: 0601020304"
+              maxlength="15"
+            />
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Adresse postale</label>
+              <input
+                type="text"
+                name="adresse"
+                placeholder="10 Rue de la République"
+              />
+            </div>
+            <div class="input-group">
+              <label>Code Postal</label>
+              <input
+                type="text"
+                name="code_postal"
+                placeholder="Ex: 75001"
+                maxlength="10"
+              />
+            </div>
+          </div>
+
+          <!-- SÉCURITÉ -->
+          <div class="row">
+            <div class="input-group">
+              <label>Mot de passe *</label>
+              <input
+                type="password"
+                name="mdp_etudiant"
+                placeholder="Min. 8 caractères"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Valider le mot de passe *</label>
+              <input
+                type="password"
+                name="mdp_confirm"
+                placeholder="Confirmez"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="width: 100%">
+            Créer mon compte Étudiant
+          </button>
+        </form>
+      </div>
+
+      <div id="form-reg-entreprise" class="form-section">
+        <form action="/api/register/entreprise" method="POST">
+          <!-- INFORMATIONS ENTREPRISE -->
+          <div class="input-group">
+            <label>Nom de l'Entreprise *</label>
+            <input
+              type="text"
+              name="nom_entreprise"
+              placeholder="Ex: TechCorp Solutions"
+              required
+            />
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Numéro de SIRET *</label>
+              <input
+                type="text"
+                name="siret"
+                placeholder="14 chiffres"
+                required
+                maxlength="14"
+              />
+            </div>
+            <div class="input-group">
+              <label>Secteur d'activité</label>
+              <input
+                type="text"
+                name="secteur_activite"
+                placeholder="Ex: Développement Logiciel"
+              />
+            </div>
+          </div>
+
+          <!-- ADRESSE DU SIÈGE -->
+          <div class="input-group">
+            <label>Adresse du siège</label>
+            <input
+              type="text"
+              name="adresse_siege"
+              placeholder="50 Boulevard Haussmann"
+            />
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Code Postal</label>
+              <input
+                type="text"
+                name="code_postal"
+                placeholder="Ex: 75009"
+                maxlength="10"
+              />
+            </div>
+            <div class="input-group">
+              <label>Ville</label>
+              <input type="text" name="ville" placeholder="Ex: Paris" />
+            </div>
+          </div>
+
+          <!-- CONTACT RECRUTEUR -->
+          <div class="input-group">
+            <label>Nom du Contact (Recruteur) *</label>
+            <input
+              type="text"
+              name="nom_contact"
+              placeholder="Ex: Bernard Leroy"
+              required
+            />
+          </div>
+
+          <div class="row">
+            <div class="input-group">
+              <label>Email du Contact *</label>
+              <input
+                type="email"
+                name="email_entreprise"
+                placeholder="recrutement@entreprise.com"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Téléphone du Contact</label>
+              <input
+                type="tel"
+                name="tel_contact"
+                placeholder="Ex: 0102030405"
+                maxlength="15"
+              />
+            </div>
+          </div>
+
+          <!-- SÉCURITÉ -->
+          <div class="row">
+            <div class="input-group">
+              <label>Mot de passe *</label>
+              <input
+                type="password"
+                name="mdp_entreprise"
+                placeholder="Min. 8 caractères"
+                required
+              />
+            </div>
+            <div class="input-group">
+              <label>Valider le mot de passe *</label>
+              <input
+                type="password"
+                name="mdp_confirm"
+                placeholder="Confirmez"
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="width: 100%">
+            Créer mon compte Entreprise
+          </button>
+        </form>
+      </div>
+
+      <div class="form-footer">
+        Déjà inscrit ? <a href="connexion.html">Se connecter</a>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

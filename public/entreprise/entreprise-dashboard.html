@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>StageFlow - Espace Entreprise</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="entreprise.css" />
+
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <!-- NAVBAR DYNAMIQUE (Identique sur tout le site) -->
+    <nav class="navbar">
+      <a href="/index.html" class="logo">StageFlow</a>
+
+      <!-- C'est ici que le JS va injecter les liens de l'entreprise -->
+      <ul class="nav-links"></ul>
+
+      <!-- C'est ici que le JS va injecter "Nom Entreprise 🏢" -->
+      <a href="/entreprise/entreprise-profil.html" class="btn-account"> </a>
+    </nav>
+    <div class="container">
+      <div class="header-flex">
+        <div>
+          <h1>Tableau de bord</h1>
+          <p style="color: #666">
+            Gérez vos annonces et consultez les candidatures.
+          </p>
+        </div>
+        <a href="entreprise-nouvelle-offre.html" class="btn-primary"
+          >+ Créer une offre</a
+        >
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Titre de l'offre</th>
+            <th>Période</th>
+            <th>Candidatures</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Développeur Node.js</strong></td>
+            <td>15 Mai - 10 Juil</td>
+            <td>
+              <a href="entreprise-candidatures.html" class="badge"
+                >3 nouveaux</a
+              >
+            </td>
+            <td>En ligne</td>
+            <td class="action-btns">
+              <a href="entreprise-candidatures.html">Candidats</a>
+              <a href="entreprise-nouvelle-offre.html">Modifier</a>
+              <a href="#" style="color: #dc3545">Supprimer</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- FOOTER DYNAMIQUE -->
+    <footer id="footer-dynamique" class="site-footer"></footer>
+    <script src="../script.js"></script>
+  </body>
+</html>
