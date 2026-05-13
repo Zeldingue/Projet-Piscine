@@ -16,16 +16,12 @@
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <!-- LA NAVBAR COMMUNE -->
     <nav class="navbar">
       <a href="/index.html" class="logo">StageFlow</a>
-
-      <!-- C'est ici que le JS va injecter les 3 liens -->
       <ul class="nav-links"></ul>
-
-      <!-- C'est ici que le JS va injecter "Franc 👤" -->
       <a href="/etudiant/etudiant-profil.html" class="btn-account"> </a>
     </nav>
+
     <div class="container">
       <div class="header-flex">
         <div>
@@ -41,25 +37,26 @@
           <p>Ajouter un stage</p>
         </button>
       </div>
-      <div class="stage-card">
-        <div class="stage-info">
-          <span class="stage-dates">Mai 2025 - Juin 2025</span>
-          <h3 style="padding-top: 1rem">TechCorp Solutions</h3>
-          <p>
-            <strong>Mission :</strong> Développement d'un module back-office.
-          </p>
-          <p>Tuteur : Bernard Leroy</p>
-        </div>
-        <div class="actions">
-          <a title="Modifier">Modifier</a>
-          <a title="Supprimer" style="color: #dc3545">Supprimer</a>
+
+      <div
+        id="carnet-container"
+        style="
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+          margin-top: 2rem;
+        "
+      >
+        <div style="text-align: center; padding: 3rem; color: #666">
+          <i class="fa-solid fa-spinner fa-spin"></i> Chargement de votre
+          carnet...
         </div>
       </div>
-      <!-- MODALE AJOUT DE STAGE (Cachée par défaut) -->
+
       <div id="modal-ajouter-stage" class="modal-overlay">
         <div class="modal-content">
           <div class="modal-header">
-            <h2>Ajouter une expérience</h2>
+            <h2 id="titre-modal-stage">Ajouter une expérience</h2>
             <button class="btn-close-modal" onclick="fermerModalStage()">
               <i class="fa-solid fa-xmark"></i>
             </button>
@@ -70,14 +67,32 @@
               Renseignez les informations de votre stage validé
             </p>
 
-            <form action="etudiant-carnet.html">
+            <form id="form-ajouter-stage">
+              <input type="hidden" id="edit-id-stage" value="" />
+
               <div class="form-group">
-                <label>Nom de l'entreprise *</label>
+                <label>Entreprise *</label>
+                <select
+                  id="select-entreprise"
+                  class="form-control"
+                  required
+                  onchange="toggleAutreEntreprise()"
+                >
+                  <option value="">Chargement des entreprises...</option>
+                </select>
+              </div>
+
+              <div
+                class="form-group"
+                id="bloc-autre-entreprise"
+                style="display: none"
+              >
+                <label>Nom de la nouvelle entreprise *</label>
                 <input
                   type="text"
+                  id="ajout-entreprise-manuel"
                   class="form-control"
                   placeholder="Ex: TechCorp Solutions"
-                  required
                 />
               </div>
 
@@ -85,20 +100,31 @@
                 <label>Poste occupé / Mission *</label>
                 <input
                   type="text"
+                  id="ajout-mission"
                   class="form-control"
                   placeholder="Ex: Développeur Back-End Node.js"
                   required
                 />
               </div>
 
-              <div class="row">
-                <div class="col form-group">
+              <div class="row" style="display: flex; gap: 1rem">
+                <div class="col form-group" style="flex: 1">
                   <label>Date de début *</label>
-                  <input type="date" class="form-control" required />
+                  <input
+                    type="date"
+                    id="ajout-debut"
+                    class="form-control"
+                    required
+                  />
                 </div>
-                <div class="col form-group">
+                <div class="col form-group" style="flex: 1">
                   <label>Date de fin *</label>
-                  <input type="date" class="form-control" required />
+                  <input
+                    type="date"
+                    id="ajout-fin"
+                    class="form-control"
+                    required
+                  />
                 </div>
               </div>
 
@@ -106,6 +132,7 @@
                 <label>Tuteur de stage (Nom & Prénom)</label>
                 <input
                   type="text"
+                  id="ajout-tuteur"
                   class="form-control"
                   placeholder="Ex: Bernard Leroy"
                 />
@@ -119,39 +146,18 @@
                 "
               />
 
-              <!-- Upload Esthétique pour Rapport / Attestation -->
-              <div class="form-group">
-                <label>Attestation ou Rapport de stage (Optionnel)</label>
-                <div class="custom-file-upload">
-                  <input
-                    type="file"
-                    id="doc-upload"
-                    class="hidden-input"
-                    accept=".pdf,.doc,.docx"
-                    onchange="updateDocName(this)"
-                  />
-
-                  <label
-                    for="doc-upload"
-                    class="upload-zone"
-                    id="upload-zone-doc"
-                  >
-                    <i
-                      class="fa-solid fa-cloud-arrow-up upload-icon"
-                      id="upload-icon-doc"
-                    ></i>
-                    <span class="upload-text" id="upload-text-doc"
-                      >Cliquez pour joindre un document</span
-                    >
-                    <span class="upload-hint"
-                      >Format PDF ou Word. Max 10Mo.</span
-                    >
-                  </label>
-                </div>
-              </div>
+              <div
+                id="msg-ajout"
+                style="
+                  margin-bottom: 1rem;
+                  font-weight: 500;
+                  font-size: 0.9rem;
+                  text-align: center;
+                "
+              ></div>
 
               <div class="modal-actions">
-                <button type="submit" class="btn-submit">
+                <button type="submit" id="btn-submit-stage" class="btn-submit">
                   Enregistrer le stage
                 </button>
                 <button
@@ -167,8 +173,9 @@
         </div>
       </div>
     </div>
-    <!-- FOOTER DYNAMIQUE -->
+
     <footer id="footer-dynamique" class="site-footer"></footer>
+
     <script src="../script.js"></script>
   </body>
 </html>

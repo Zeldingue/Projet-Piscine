@@ -157,30 +157,8 @@
             style="color: #586b33; font-weight: 600; margin-bottom: 1.5rem"
           ></p>
 
-          <form action="/etudiant/etudiant-dashboard.html">
-            <div class="row">
-              <div class="col form-group">
-                <label>Prénom</label>
-                <input type="text" class="form-control" value="Aylan" />
-              </div>
-              <div class="col form-group">
-                <label>Nom</label>
-                <input type="text" class="form-control" value="Saidi" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Email de contact</label>
-              <input
-                type="email"
-                class="form-control"
-                value="aylan.saidi@ecole.fr"
-              />
-            </div>
-
-            <hr
-              style="border: 0; border-top: 1px solid #eaeaea; margin: 1.5rem 0"
-            />
+          <form id="form-candidature">
+            <input type="hidden" id="candidature-id-offre" value="" />
 
             <div class="form-group">
               <label>Curriculum Vitae (CV) *</label>
@@ -189,7 +167,7 @@
                   type="file"
                   id="cv-upload"
                   class="hidden-input"
-                  accept=".pdf,.doc,.docx,.txt"
+                  accept=".pdf,.doc,.docx"
                   required
                   onchange="updateFileName(this)"
                 />
@@ -213,12 +191,18 @@
             <div class="form-group">
               <label>Lettre de motivation *</label>
               <textarea
+                id="lettre-motivation"
                 class="form-control"
                 placeholder="Rédigez votre lettre ici..."
                 required
                 style="min-height: 120px"
               ></textarea>
             </div>
+
+            <div
+              id="msg-candidature"
+              style="text-align: center; font-weight: bold; margin-top: 1rem"
+            ></div>
 
             <div
               class="modal-actions"
@@ -231,14 +215,7 @@
                 type="button"
                 class="btn-cancel-modal"
                 onclick="fermerModal()"
-                style="
-                  flex: 1;
-                  padding: 1rem;
-                  border: 1px solid #ddd;
-                  background: white;
-                  border-radius: 8px;
-                  cursor: pointer;
-                "
+                style="flex: 1"
               >
                 Annuler
               </button>

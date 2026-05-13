@@ -48,6 +48,7 @@ async function chargerMenuDynamique() {
           btnAccount.href = "/etudiant/etudiant-profil.html";
         } else if (session.role === "entreprise") {
           navLinks.innerHTML = `
+            <li><a href="/recherche.html">Rechercher un stage</a></li>
             <li><a href="/entreprise/entreprise-dashboard.html">Tableau de bord</a></li>
             <li><a href="/entreprise/entreprise-candidatures.html">Candidats</a></li>
             <li><a href="/entreprise/entreprise-nouvelle-offre.html">Publier une offre</a></li>
@@ -154,6 +155,7 @@ async function chargerMenuDynamique() {
           } else if (session.role === "entreprise") {
             footerClass = "site-footer-entreprise";
             liensRapides = `
+              <li><a href="/recherche.html">Rechercher un stage</a></li>
               <li><a href="/entreprise/entreprise-dashboard.html">Tableau de bord</a></li>
               <li><a href="/entreprise/entreprise-nouvelle-offre.html">Publier une offre</a></li>
               <li><a href="/entreprise/entreprise-candidatures.html">Gérer les candidats</a></li>
@@ -216,11 +218,28 @@ function switchRegRole(role) {
   document.getElementById("form-reg-" + role).classList.add("active");
 }
 
+// 1. Ouvrir la modale
 function ouvrirModal() {
-  document.getElementById("modal-postuler").classList.add("active");
-  document.body.style.overflow = "hidden";
-}
+  // On récupère l'ID dans l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const idOffre = urlParams.get("id");
 
+  console.log("ID de l'offre trouvé dans l'URL :", idOffre); // Regarde dans la console (F12) si ça affiche bien un chiffre !
+
+  if (!idOffre || idOffre === "") {
+    alert(
+      "⚠️ Erreur : Impossible de trouver l'offre. Êtes-vous bien passé par la page de recherche ? (Il manque le ?id=... dans l'URL)",
+    );
+    return; // On bloque l'ouverture de la modale !
+  }
+
+  // On met l'ID dans le champ caché
+  document.getElementById("candidature-id-offre").value = idOffre;
+
+  // On affiche la modale
+  const modal = document.getElementById("modal-postuler");
+  if (modal) modal.style.display = "flex";
+}
 function fermerModal() {
   document.getElementById("modal-postuler").classList.remove("active");
   document.body.style.overflow = "auto";
@@ -277,14 +296,39 @@ function updateFileName(input) {
   }
 }
 
+// Ouvre la modale pour un NOUVEAU stage
 function ouvrirModalStage() {
-  document.getElementById("modal-ajouter-stage").classList.add("active");
-  document.body.style.overflow = "hidden";
+  document.getElementById("edit-id-stage").value = ""; // TRÈS IMPORTANT : On vide l'ID caché !
+  document.getElementById("titre-modal-stage").textContent =
+    "Ajouter une expérience";
+  document.getElementById("btn-submit-stage").textContent =
+    "Enregistrer le stage";
+
+  const form = document.getElementById("form-ajouter-stage");
+  if (form) form.reset(); // On vide toutes les cases
+
+  toggleAutreEntreprise(); // On reset l'affichage du champ "autre"
+
+  // On vide les messages d'erreur précédents s'il y en a
+  const msg = document.getElementById("msg-ajout");
+  if (msg) msg.textContent = "";
+
+  const modal = document.getElementById("modal-ajouter-stage");
+  if (modal) modal.style.display = "flex";
 }
 
 function fermerModalStage() {
-  document.getElementById("modal-ajouter-stage").classList.remove("active");
-  document.body.style.overflow = "auto";
+  const modal = document.getElementById("modal-ajouter-stage");
+  if (modal) {
+    modal.style.display = "none";
+  }
+  // On reset le formulaire pour que la prochaine ouverture soit propre
+  const form = document.getElementById("form-ajouter-stage");
+  if (form) form.reset();
+
+  // On vide le message d'erreur/succès
+  const msg = document.getElementById("msg-ajout");
+  if (msg) msg.textContent = "";
 }
 
 function updateDocName(input) {
@@ -497,7 +541,11 @@ async function chargerProfil() {
   const emailElement = document.getElementById("profil-email");
   const telephoneElement = document.getElementById("profil-telephone");
 
-  // Si on n'est pas sur une page qui contient ces champs, on arrête la fonction
+  // Nouveaux champs spécifiques à l'entreprise
+  const siretElement = document.getElementById("profil-siret");
+  const secteurElement = document.getElementById("profil-secteur");
+
+  // Si on n'est pas sur une page qui contient les champs de base, on arrête
   if (!nomElement || !prenomElement || !emailElement) return;
 
   try {
@@ -507,13 +555,22 @@ async function chargerProfil() {
     if (data.success) {
       const utilisateur = data.data;
 
-      // Grâce à l'astuce "AS" en SQL, on utilise les mêmes noms pour tout le monde !
+      // Champs communs à tout le monde
       nomElement.value = utilisateur.nom || "";
       prenomElement.value = utilisateur.prenom || "";
       emailElement.value = utilisateur.email || "";
 
       if (telephoneElement) {
         telephoneElement.value = utilisateur.telephone || "";
+      }
+
+      // Champs spécifiques à l'entreprise (s'ils existent sur la page)
+      if (siretElement && utilisateur.siret) {
+        siretElement.value = utilisateur.siret;
+      }
+
+      if (secteurElement && utilisateur.secteur) {
+        secteurElement.value = utilisateur.secteur;
       }
     } else {
       console.error("Erreur :", data.message);
@@ -525,70 +582,6 @@ async function chargerProfil() {
 
 /* ==========================================================================
    GESTION DU CHANGEMENT DE MOT DE PASSE
-   ========================================================================== */
-async function configurerChangementMdp() {
-  const formMdp = document.getElementById("form-mdp");
-  const msgMdp = document.getElementById("msg-mdp");
-
-  if (!formMdp) return;
-
-  formMdp.addEventListener("submit", async (e) => {
-    e.preventDefault(); // Empêche la page de se recharger brusquement
-
-    const ancienMdp = document.getElementById("ancien-mdp").value;
-    const nouveauMdp = document.getElementById("nouveau-mdp").value;
-    const confirmMdp = document.getElementById("confirm-mdp").value;
-
-    if (nouveauMdp !== confirmMdp) {
-      msgMdp.textContent =
-        "❌ Les nouveaux mots de passe ne correspondent pas.";
-      msgMdp.style.color = "red";
-      return;
-    }
-
-    try {
-      msgMdp.textContent = "⏳ Mise à jour en cours...";
-      msgMdp.style.color = "#888";
-
-      // On envoie les infos au serveur (methode POST)
-      const response = await fetch("/api/etudiant/mot-de-passe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ancienMdp: ancienMdp,
-          nouveauMdp: nouveauMdp,
-          confirmMdp: confirmMdp,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        msgMdp.textContent = "✅ " + data.message;
-        msgMdp.style.color = "green";
-        formMdp.reset(); // Vide les champs
-      } else {
-        msgMdp.textContent = "❌ " + data.message;
-        msgMdp.style.color = "red";
-      }
-    } catch (error) {
-      console.error("Erreur Fetch:", error);
-      msgMdp.textContent = "❌ Impossible de joindre le serveur.";
-      msgMdp.style.color = "red";
-    }
-  });
-}
-
-// On lance les deux fonctions au chargement de la page
-document.addEventListener("DOMContentLoaded", () => {
-  chargerProfil();
-  configurerChangementMdp();
-});
-
-document.addEventListener("DOMContentLoaded", chargerProfilEtudiant);
-
-/* ==========================================================================
-   GESTION DU CHANGEMENT DE MOT DE PASSE (Profil Étudiant)
    ========================================================================== */
 async function configurerChangementMdp() {
   const formMdp = document.getElementById("form-mdp");
@@ -617,7 +610,7 @@ async function configurerChangementMdp() {
       msgMdp.style.color = "#888";
 
       // On envoie les infos au serveur (methode POST)
-      const response = await fetch("/api/etudiant/mot-de-passe", {
+      const response = await fetch("/api/mot-de-passe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -645,5 +638,561 @@ async function configurerChangementMdp() {
   });
 }
 
-// On lance la configuration au chargement de la page
-document.addEventListener("DOMContentLoaded", configurerChangementMdp);
+/* ==========================================================================
+   GESTION DE LA SAUVEGARDE DU PROFIL
+   ========================================================================== */
+async function configurerModificationProfil() {
+  const formProfil = document.getElementById("form-profil");
+  const msgProfil = document.getElementById("msg-profil");
+
+  if (!formProfil) return;
+
+  formProfil.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // On récupère les valeurs des champs (en utilisant le point d'interrogation
+    // au cas où le champ n'existe pas pour ce rôle, ex: secteur pour un étudiant)
+    const nom = document.getElementById("profil-nom")?.value;
+    const prenom = document.getElementById("profil-prenom")?.value;
+    const email = document.getElementById("profil-email")?.value;
+    const telephone = document.getElementById("profil-telephone")?.value;
+    const secteur = document.getElementById("profil-secteur")?.value;
+
+    try {
+      if (msgProfil) {
+        msgProfil.textContent = "⏳ Sauvegarde en cours...";
+        msgProfil.style.color = "#888";
+      }
+
+      // On utilise la méthode PUT (souvent utilisée pour la mise à jour)
+      const response = await fetch("/api/profil", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nom: nom,
+          prenom: prenom,
+          email: email,
+          telephone: telephone,
+          secteur: secteur,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (msgProfil) {
+        if (data.success) {
+          msgProfil.textContent = "✅ " + data.message;
+          msgProfil.style.color = "green";
+        } else {
+          msgProfil.textContent = "❌ " + data.message;
+          msgProfil.style.color = "red";
+        }
+      }
+    } catch (error) {
+      console.error("Erreur Fetch:", error);
+      if (msgProfil) {
+        msgProfil.textContent = "❌ Impossible de joindre le serveur.";
+        msgProfil.style.color = "red";
+      }
+    }
+  });
+}
+
+/* ==========================================================================
+   CHARGEMENT DU TABLEAU DES CANDIDATURES (Dashboard Étudiant)
+   ========================================================================== */
+async function chargerMesCandidatures() {
+  const tbody = document.getElementById("candidatures-body");
+
+  if (!tbody) return;
+
+  try {
+    const response = await fetch("/api/mes-candidatures");
+    const data = await response.json();
+
+    if (data.success) {
+      tbody.innerHTML = ""; // On vide le message de chargement
+
+      if (data.data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 2rem; color: #888;">
+              Vous n'avez postulé à aucune offre pour le moment.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      data.data.forEach((candidature) => {
+        // 1. Formatage de la date (ex: 15/04/2026)
+        const dateCandidature = new Date(
+          candidature.date_candidature,
+        ).toLocaleDateString("fr-FR");
+
+        // 2. Détermination de la couleur du badge de statut
+        let classeStatut = "status attente"; // Par défaut (gris/orange)
+        let texteStatut = candidature.statut || "En attente";
+
+        const statutMin = texteStatut.toLowerCase();
+        if (statutMin.includes("accept")) {
+          classeStatut = "status accepte"; // Vert
+        } else if (statutMin.includes("refus")) {
+          classeStatut = "status refuse"; // Rouge
+        }
+
+        // 3. Création de la ligne HTML
+        const ligneHTML = `
+          <tr>
+            <td><strong>${candidature.nom_entreprise}</strong></td>
+            <td>${candidature.titre_offre}</td>
+            <td>${dateCandidature}</td>
+            <td><span class="${classeStatut}">${texteStatut}</span></td>
+            <td>
+              <a href="/offre-details.html?id=${candidature.id_offre}" class="btn-view">Détails</a>
+            </td>
+          </tr>
+        `;
+
+        // 4. Injection dans le tableau
+        tbody.innerHTML += ligneHTML;
+      });
+    } else {
+      tbody.innerHTML = `<tr><td colspan="5" style="color: red; text-align: center;">Erreur : ${data.message}</td></tr>`;
+    }
+  } catch (error) {
+    console.error(
+      "Erreur de fetch lors du chargement des candidatures :",
+      error,
+    );
+    tbody.innerHTML = `<tr><td colspan="5" style="color: red; text-align: center;">Impossible de charger les données.</td></tr>`;
+  }
+}
+
+/* ==========================================================================
+   AFFICHAGE DU CARNET DE STAGE (Format Cartes)
+   ========================================================================== */
+async function chargerCarnetStage() {
+  const container = document.getElementById("carnet-container");
+  if (!container) return;
+
+  try {
+    const response = await fetch("/api/carnet-stage");
+    const data = await response.json();
+
+    if (data.success) {
+      container.innerHTML = "";
+
+      if (data.data.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; background: #f9f9f9; border-radius: 8px; color: #888;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem; color: #ccc;"></i><br>
+            Aucun stage n'est encore enregistré dans votre carnet.
+          </div>`;
+        return;
+      }
+
+      data.data.forEach((stage) => {
+        // --- 1. PRÉPARATION DES VARIABLES (La clé du problème était ici !) ---
+
+        // On formate les dates pour les calendriers (format YYYY-MM-DD exigé par <input type="date">)
+        const dateDebutInput = new Date(stage.date_debut)
+          .toISOString()
+          .split("T")[0];
+        const dateFinInput = new Date(stage.date_fin)
+          .toISOString()
+          .split("T")[0];
+
+        // On crée les variables pour le onclick (en sécurisant les apostrophes pour éviter que le JS plante)
+        const nomEnt = (stage.nom_entreprise || "").replace(/'/g, "\\'");
+        const mission = (stage.mission || "").replace(/'/g, "\\'");
+        const tuteur = (stage.tuteur || "").replace(/'/g, "\\'");
+
+        // --- 2. FORMATAGE POUR L'AFFICHAGE ---
+        const optionsMoisAnnee = { month: "long", year: "numeric" };
+        const debutFormate = new Date(stage.date_debut).toLocaleDateString(
+          "fr-FR",
+          optionsMoisAnnee,
+        );
+        const finFormate = new Date(stage.date_fin).toLocaleDateString(
+          "fr-FR",
+          optionsMoisAnnee,
+        );
+        const periode = `${debutFormate.charAt(0).toUpperCase() + debutFormate.slice(1)} - ${finFormate.charAt(0).toUpperCase() + finFormate.slice(1)}`;
+
+        // --- 3. GÉNÉRATION DU HTML ---
+        container.innerHTML += `
+          <div class="stage-card">
+            <div class="stage-info">
+              <span class="stage-dates">${periode}</span>
+              <h3 style="padding-top: 1rem">${stage.nom_entreprise}</h3>
+              <p>
+                <strong>Mission :</strong> ${stage.mission}
+              </p>
+              <p>Tuteur : ${stage.tuteur || "Non renseigné"}</p>
+            </div>
+            <div class="actions">
+              <a href="#" onclick="ouvrirModalModification(${stage.id_carnet}, '${nomEnt}', '${mission}', '${dateDebutInput}', '${dateFinInput}', '${tuteur}')">
+                <i class="fa-solid fa-pen"></i> Modifier
+              </a>
+              <a href="#" onclick="supprimerStage(${stage.id_carnet})" title="Supprimer" style="color: #dc3545; margin-left: 10px;">
+                <i class="fa-solid fa-trash"></i> Supprimer
+              </a>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      container.innerHTML = `<p style="color: red; text-align: center;">Erreur : ${data.message}</p>`;
+    }
+  } catch (error) {
+    console.error("Erreur chargement carnet :", error);
+    container.innerHTML =
+      '<p style="color: red; text-align: center;">Erreur de chargement du carnet.</p>';
+  }
+}
+
+/* ==========================================================================
+   GESTION DE L'AJOUT ET DE LA MODIFICATION DE STAGE (Modale)
+   ========================================================================== */
+async function configurerAjoutStage() {
+  const form = document.getElementById("form-ajouter-stage");
+  const msg = document.getElementById("msg-ajout");
+
+  if (!form) return;
+
+  // On utilise form.onsubmit au lieu de addEventListener pour éviter que l'action s'envoie en double !
+  form.onsubmit = async (e) => {
+    e.preventDefault(); // Empêche la page de se recharger
+
+    // 1. Récupération de l'ID (si vide = Ajout, si rempli = Modification)
+    const editId = document.getElementById("edit-id-stage").value;
+
+    // 2. Récupération du nom de l'entreprise
+    const selectEnt = document.getElementById("select-entreprise");
+    const inputManuel = document.getElementById("ajout-entreprise-manuel");
+    let entrepriseEnvoi = "";
+
+    if (selectEnt.value === "autre") {
+      entrepriseEnvoi = inputManuel.value;
+    } else {
+      entrepriseEnvoi = selectEnt.options[selectEnt.selectedIndex].text;
+    }
+
+    // 3. Préparation des données
+    const bodyData = {
+      entreprise: entrepriseEnvoi,
+      mission: document.getElementById("ajout-mission").value,
+      dateDebut: document.getElementById("ajout-debut").value,
+      dateFin: document.getElementById("ajout-fin").value,
+      tuteur: document.getElementById("ajout-tuteur").value,
+    };
+
+    // 4. LA MAGIE EST ICI : Choix de la route et de la méthode !
+    // Si editId existe, on tape sur /api/stage-effectue/ID avec la méthode PUT
+    // Sinon, on tape sur /api/stage-effectue avec la méthode POST
+    const url = editId
+      ? `/api/stage-effectue/${editId}`
+      : "/api/stage-effectue";
+    const methode = editId ? "PUT" : "POST";
+
+    if (msg) {
+      msg.textContent = "⏳ Enregistrement en cours...";
+      msg.style.color = "#888";
+    }
+
+    try {
+      // 5. On envoie au serveur
+      const response = await fetch(url, {
+        method: methode,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        if (msg) {
+          msg.textContent = "✅ " + data.message;
+          msg.style.color = "green";
+        }
+
+        // On attend 1 seconde pour que l'étudiant voie le message vert, puis on ferme et on actualise
+        setTimeout(() => {
+          fermerModalStage();
+          chargerCarnetStage(); // Magie : les cartes se mettent à jour toutes seules !
+        }, 1000);
+      } else {
+        if (msg) {
+          msg.textContent = "❌ " + data.message;
+          msg.style.color = "red";
+        }
+      }
+    } catch (err) {
+      console.error("Erreur validation stage :", err);
+      if (msg) {
+        msg.textContent = "❌ Impossible de joindre le serveur.";
+        msg.style.color = "red";
+      }
+    }
+  };
+}
+
+// Fonction pour remplir le menu déroulant
+async function chargerListeEntreprises() {
+  const select = document.getElementById("select-entreprise");
+  if (!select) return;
+
+  try {
+    const response = await fetch("/api/entreprises");
+    const data = await response.json();
+
+    if (data.success) {
+      let options =
+        '<option value="">-- Sélectionnez une entreprise --</option>';
+      data.data.forEach((ent) => {
+        options += `<option value="${ent.id_entreprise}">${ent.nom_entreprise}</option>`;
+      });
+      options +=
+        '<option value="autre" style="font-weight: bold; color: #007bff;">+ Autre (Ajouter une nouvelle)</option>';
+      select.innerHTML = options;
+    }
+  } catch (error) {
+    console.error("Erreur chargement entreprises :", error);
+  }
+}
+
+// Fonction pour cacher/afficher le champ texte selon le choix
+function toggleAutreEntreprise() {
+  const select = document.getElementById("select-entreprise");
+  const blocAutre = document.getElementById("bloc-autre-entreprise");
+  const inputManuel = document.getElementById("ajout-entreprise-manuel");
+
+  if (select.value === "autre") {
+    blocAutre.style.display = "block";
+    inputManuel.required = true; // Devient obligatoire
+  } else {
+    blocAutre.style.display = "none";
+    inputManuel.required = false;
+    inputManuel.value = ""; // On vide la case
+  }
+}
+
+async function supprimerStage(id) {
+  if (!confirm("Es-tu sûr de vouloir supprimer ce stage de ton carnet ?"))
+    return;
+
+  try {
+    const response = await fetch(`/api/stage-effectue/${id}`, {
+      method: "DELETE",
+    });
+    const data = await response.json();
+
+    if (data.success) {
+      // On recharge les cartes pour voir la disparition
+      chargerCarnetStage();
+    } else {
+      alert("Erreur : " + data.message);
+    }
+  } catch (error) {
+    console.error("Erreur suppression :", error);
+  }
+}
+
+// Ouvre LA MÊME modale, mais la pré-remplit pour la modification
+function ouvrirModalModification(id, nomEnt, mission, debut, fin, tuteur) {
+  // 1. On stocke l'ID dans le champ caché
+  document.getElementById("edit-id-stage").value = id;
+
+  // 2. On change les textes pour que ce soit logique
+  const titre = document.querySelector("#modal-ajouter-stage h2");
+  if (titre) titre.textContent = "Modifier l'expérience";
+
+  const btn = document.querySelector("#form-ajouter-stage .btn-submit");
+  if (btn) btn.textContent = "Mettre à jour le stage";
+
+  // 3. On remplit les cases
+  document.getElementById("ajout-mission").value = mission;
+  document.getElementById("ajout-debut").value = debut;
+  document.getElementById("ajout-fin").value = fin;
+  document.getElementById("ajout-tuteur").value = tuteur;
+
+  // 4. Logique pour le menu déroulant de l'entreprise
+  const select = document.getElementById("select-entreprise");
+  let optionTrouvee = false;
+
+  for (let i = 0; i < select.options.length; i++) {
+    if (select.options[i].text === nomEnt) {
+      select.selectedIndex = i;
+      optionTrouvee = true;
+      break;
+    }
+  }
+
+  if (!optionTrouvee) {
+    select.value = "autre";
+    document.getElementById("ajout-entreprise-manuel").value = nomEnt;
+  }
+  toggleAutreEntreprise(); // Affiche ou cache le champ manuel si besoin
+
+  // 5. On affiche la modale !
+  const modal = document.getElementById("modal-ajouter-stage");
+  if (modal) modal.style.display = "flex";
+}
+
+/* ==========================================================================
+   RECHERCHE D'OFFRES
+   ========================================================================== */
+async function rechercherOffres() {
+  const keyword = document.getElementById("search-keyword").value.trim();
+  const location = document.getElementById("search-location").value.trim();
+  const container = document.getElementById("offres-container");
+
+  if (!container) return;
+
+  container.innerHTML =
+    '<p style="text-align: center; width: 100%; color: #888;"><i class="fa-solid fa-spinner fa-spin"></i> Recherche en cours...</p>';
+
+  const params = new URLSearchParams();
+  if (keyword) params.append("keyword", keyword);
+  if (location) params.append("location", location);
+
+  try {
+    const response = await fetch(`/api/offres?${params.toString()}`);
+    const data = await response.json();
+
+    if (data.success) {
+      container.innerHTML = "";
+
+      if (data.data.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666; background: white; border: 1px solid #eaeaea; border-radius: 8px;">
+            Aucune offre ne correspond à votre recherche. 😔
+          </div>`;
+        return;
+      }
+
+      data.data.forEach((offre) => {
+        // On raccourcit la description pour que la carte reste propre
+        const missionTexte = offre.mission
+          ? offre.mission.substring(0, 150) + "..."
+          : "Aucune description fournie.";
+
+        // --- LA MAGIE EST LÀ : ON UTILISE TON CSS ---
+        container.innerHTML += `
+          <div class="job-card">
+            <div class="job-company">${offre.nom_entreprise} — ${offre.ville}</div>
+            <h3 class="job-title">${offre.titre_offre}</h3>
+            <p class="job-details">${missionTexte}</p>
+            <a href="offre-details.html?id=${offre.id_offre}" class="btn-view-offer">Voir l'offre</a>
+          </div>
+        `;
+      });
+    }
+  } catch (error) {
+    console.error("Erreur de recherche :", error);
+    container.innerHTML = `<p style="grid-column: 1 / -1; color: red; text-align: center;">Impossible de charger les offres.</p>`;
+  }
+}
+
+// Lancer une recherche vide au démarrage pour afficher toutes les offres par défaut
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("offres-container")) {
+    rechercherOffres();
+  }
+});
+
+// Optionnel : Lancer une recherche vide au démarrage pour afficher toutes les offres par défaut
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("offres-container")) {
+    rechercherOffres();
+  }
+});
+
+/* ==========================================================================
+   ENVOYER LA CANDIDATURE (Formulaire avec CV et Lettre)
+   ========================================================================== */
+const formCandidature = document.getElementById("form-candidature");
+
+if (formCandidature) {
+  formCandidature.onsubmit = async (e) => {
+    e.preventDefault(); // Empêche la page de se recharger
+
+    // 1. Récupération des éléments HTML avec les BONS IDs
+    const msg = document.getElementById("msg-candidature");
+    const idOffre = document.getElementById("candidature-id-offre").value;
+    const lettre = document.getElementById("lettre-motivation").value;
+    const cvInput = document.getElementById("cv-upload");
+
+    // 2. Sécurité : On vérifie que l'input existe ET qu'un fichier a bien été choisi
+    if (!cvInput || !cvInput.files || cvInput.files.length === 0) {
+      if (msg) {
+        msg.textContent = "❌ Veuillez sélectionner un fichier pour votre CV.";
+        msg.style.color = "red";
+      }
+      return; // On arrête tout si pas de CV
+    }
+
+    if (!idOffre) {
+      msg.textContent = "❌ Erreur interne : ID de l'offre manquant.";
+      msg.style.color = "red";
+      return;
+    }
+
+    // 3. Préparation du "paquet" de données
+    const formData = new FormData();
+    formData.append("idOffre", idOffre);
+    formData.append("lettreMotivation", lettre);
+    formData.append("cv", cvInput.files[0]);
+
+    if (msg) {
+      msg.textContent = "⏳ Envoi de la candidature en cours...";
+      msg.style.color = "#888";
+    }
+
+    try {
+      // 4. Envoi au serveur
+      const response = await fetch("/api/postuler", {
+        method: "POST",
+        body: formData, // On laisse le navigateur gérer le Content-Type tout seul !
+      });
+
+      const data = await response.json();
+
+      // 5. Gestion de la réponse
+      if (data.success) {
+        if (msg) {
+          msg.textContent = "✅ " + data.message;
+          msg.style.color = "green";
+        }
+
+        // On ferme la modale après 2 secondes et on recharge la page
+        setTimeout(() => {
+          fermerModal(); // Assure-toi que cette fonction existe bien !
+          window.location.reload();
+        }, 2000);
+      } else {
+        if (msg) {
+          msg.textContent = "❌ " + data.message;
+          msg.style.color = "red";
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la candidature :", error);
+      if (msg) {
+        msg.textContent = "❌ Erreur de connexion au serveur.";
+        msg.style.color = "red";
+      }
+    }
+  };
+}
+
+// On lance les fonctions au chargement de la page
+document.addEventListener("DOMContentLoaded", () => {
+  chargerProfil();
+  configurerModificationProfil();
+  configurerChangementMdp();
+  chargerMesCandidatures();
+  chargerCarnetStage();
+  configurerAjoutStage();
+  chargerListeEntreprises();
+});

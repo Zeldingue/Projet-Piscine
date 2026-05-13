@@ -28,7 +28,7 @@
     <div class="container">
       <h1>Mes informations personnelles</h1>
 
-      <form action="#" class="profil-form">
+      <form id="form-profil" class="profil-form">
         <div style="display: flex; gap: 1.5rem">
           <div class="form-group" style="flex: 1">
             <label>Prénom</label>
@@ -49,6 +49,10 @@
           <label>Numéro de téléphone</label>
           <input type="text" id="profil-telephone" class="form-control" />
         </div>
+        <div
+          id="msg-profil"
+          style="margin-bottom: 1rem; font-weight: 500; font-size: 0.9rem"
+        ></div>
 
         <button type="submit" class="btn-submit">
           Sauvegarder les modifications

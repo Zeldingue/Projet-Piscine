@@ -32,25 +32,25 @@
 
       <div class="admin-panel">
         <h2>Mes informations</h2>
-        <form action="#">
+        <form id="form-profil" class="profil-form">
           <div style="display: flex; gap: 1.5rem">
             <div class="form-group" style="flex: 1">
               <label>Nom</label>
-              <input type="text" class="form-control" value="Boss" />
+              <input type="text" id="profil-nom" class="form-control" />
             </div>
             <div class="form-group" style="flex: 1">
               <label>Prénom</label>
-              <input type="text" class="form-control" value="Admin" />
+              <input type="text" id="profil-prenom" class="form-control" />
             </div>
           </div>
           <div class="form-group">
             <label>Adresse Email de connexion</label>
-            <input
-              type="email"
-              class="form-control"
-              value="admin@stageflow.fr"
-            />
+            <input type="email" id="profil-email" class="form-control" />
           </div>
+          <div
+            id="msg-profil"
+            style="margin-bottom: 1rem; font-weight: 500; font-size: 0.9rem"
+          ></div>
           <button
             type="submit"
             class="btn-submit"
@@ -63,23 +63,45 @@
 
       <div class="admin-panel">
         <h2>Changer le mot de passe</h2>
-        <form action="#">
+        <form id="form-mdp">
+          <div class="form-group">
+            <label>Mot de passe actuel</label>
+            <input
+              type="password"
+              id="ancien-mdp"
+              class="form-control"
+              placeholder="Entrez votre mot de passe actuel"
+              required
+            />
+          </div>
           <div class="form-group">
             <label>Nouveau mot de passe</label>
             <input
               type="password"
+              id="nouveau-mdp"
               class="form-control"
               placeholder="Entrez un nouveau mot de passe fort"
+              required
+              minlength="6"
             />
           </div>
           <div class="form-group">
             <label>Confirmer le mot de passe</label>
             <input
               type="password"
+              id="confirm-mdp"
               class="form-control"
               placeholder="Retapez le mot de passe"
+              required
+              minlength="6"
             />
           </div>
+
+          <div
+            id="msg-mdp"
+            style="margin-bottom: 1rem; font-weight: 500; font-size: 0.9rem"
+          ></div>
+
           <button
             type="submit"
             class="btn-submit"

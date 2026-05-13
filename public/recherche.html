@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StageFlow - Recherche d'Offres</title>
-    <!-- Polices Inter (sans-serif) et Lora (serif pour les titres des offres) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600&display=swap"
       rel="stylesheet"
@@ -17,7 +16,6 @@
     <link rel="stylesheet" href="etudiant/etudiant.css" />
   </head>
   <body>
-    <!-- NAVBAR -->
     <nav class="navbar">
       <a href="index.html" class="logo">StageFlow</a>
       <ul class="nav-links">
@@ -33,37 +31,39 @@
       </a>
     </nav>
 
-    <!-- ZONE DE RECHERCHE NOIRE -->
     <header class="search-hero">
       <h1>Trouvez votre prochain stage</h1>
 
       <div class="search-pill">
         <input
           type="text"
+          id="search-keyword"
           class="search-input"
           placeholder="Métier, mots-clés, ou entreprise..."
         />
         <div class="search-divider"></div>
         <input
           type="text"
+          id="search-location"
           class="search-input"
           placeholder="Ville ou code postal..."
         />
-        <button class="btn-search">Rechercher</button>
+        <button class="btn-search" onclick="rechercherOffres()">
+          Rechercher
+        </button>
       </div>
     </header>
 
-    <!-- GRILLE DE RÉSULTATS -->
-    <
     <div class="results-section">
       <h2>Offres de stages récentes</h2>
 
-      <div class="cards-grid">
-        <p>Chargement des offres en cours...</p>
+      <div class="cards-grid" id="offres-container">
+        <p style="text-align: center; width: 100%; color: #888">
+          Chargement des offres en cours...
+        </p>
       </div>
     </div>
 
-    <!-- FOOTER PUBLIC -->
     <footer class="site-footer-etudiant">
       <div class="footer-content">
         <div class="footer-col brand-col">
