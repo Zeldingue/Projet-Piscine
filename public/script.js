@@ -1,4 +1,49 @@
 /* ==========================================================================
+   GARDE DU CORPS : VÉRIFICATION DE CONNEXION GLOBALE
+   ========================================================================== */
+async function verifierAcces() {
+  // 1. Liste stricte de tes pages publiques (celles de ton image)
+  const pagesPubliques = [
+    "/", // La racine du site
+    "index.html",
+    "connexion.html",
+    "register.html",
+    "recherche.html",
+    "offre-details.html", // ou offre.html selon comment tu l'as nommée
+  ];
+
+  // 2. On regarde sur quelle page on se trouve actuellement
+  const cheminActuel = window.location.pathname;
+
+  // Si le chemin se termine par l'une des pages publiques, on arrête la vérification (on laisse passer)
+  const estPagePublique = pagesPubliques.some((page) =>
+    cheminActuel.endsWith(page),
+  );
+  if (estPagePublique) {
+    return;
+  }
+
+  // 3. Si c'est une page privée (ex: dashboard), on interroge le serveur
+  try {
+    const response = await fetch("/api/auth/status");
+    const data = await response.json();
+
+    // 4. Si le serveur répond "Non connecté", on l'éjecte vers l'accueil !
+    if (!data.loggedIn) {
+      console.warn("Accès refusé : Redirection vers l'accueil.");
+      window.location.replace("/index.html"); // .replace empêche de faire "Retour" dans l'historique
+    }
+  } catch (error) {
+    console.error("Erreur lors de la vérification de session :", error);
+    // En cas de gros bug serveur, par sécurité on renvoie à l'accueil
+    window.location.replace("/index.html");
+  }
+}
+
+// On lance le garde du corps IMMÉDIATEMENT (pas besoin d'attendre que la page soit finie de charger)
+verifierAcces();
+
+/* ==========================================================================
    GESTION DE LA CHARTE GRAPHIQUE (Couleurs de la Navbar)
    ========================================================================== */
 function setCharteGraphique(role) {
@@ -50,7 +95,6 @@ async function chargerMenuDynamique() {
           navLinks.innerHTML = `
             <li><a href="/recherche.html">Rechercher un stage</a></li>
             <li><a href="/entreprise/entreprise-dashboard.html">Tableau de bord</a></li>
-            <li><a href="/entreprise/entreprise-candidatures.html">Candidats</a></li>
             <li><a href="/entreprise/entreprise-nouvelle-offre.html">Publier une offre</a></li>
           `;
           btnAccount.innerHTML = `${session.nom} <i class="fa-solid fa-building"></i>`;
@@ -158,7 +202,6 @@ async function chargerMenuDynamique() {
               <li><a href="/recherche.html">Rechercher un stage</a></li>
               <li><a href="/entreprise/entreprise-dashboard.html">Tableau de bord</a></li>
               <li><a href="/entreprise/entreprise-nouvelle-offre.html">Publier une offre</a></li>
-              <li><a href="/entreprise/entreprise-candidatures.html">Gérer les candidats</a></li>
               <li><a href="/entreprise/entreprise-profil.html">Profil Entreprise</a></li>
             `;
           }
@@ -699,76 +742,6 @@ async function configurerModificationProfil() {
 }
 
 /* ==========================================================================
-   CHARGEMENT DU TABLEAU DES CANDIDATURES (Dashboard Étudiant)
-   ========================================================================== */
-async function chargerMesCandidatures() {
-  const tbody = document.getElementById("candidatures-body");
-
-  if (!tbody) return;
-
-  try {
-    const response = await fetch("/api/mes-candidatures");
-    const data = await response.json();
-
-    if (data.success) {
-      tbody.innerHTML = ""; // On vide le message de chargement
-
-      if (data.data.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align: center; padding: 2rem; color: #888;">
-              Vous n'avez postulé à aucune offre pour le moment.
-            </td>
-          </tr>`;
-        return;
-      }
-
-      data.data.forEach((candidature) => {
-        // 1. Formatage de la date (ex: 15/04/2026)
-        const dateCandidature = new Date(
-          candidature.date_candidature,
-        ).toLocaleDateString("fr-FR");
-
-        // 2. Détermination de la couleur du badge de statut
-        let classeStatut = "status attente"; // Par défaut (gris/orange)
-        let texteStatut = candidature.statut || "En attente";
-
-        const statutMin = texteStatut.toLowerCase();
-        if (statutMin.includes("accept")) {
-          classeStatut = "status accepte"; // Vert
-        } else if (statutMin.includes("refus")) {
-          classeStatut = "status refuse"; // Rouge
-        }
-
-        // 3. Création de la ligne HTML
-        const ligneHTML = `
-          <tr>
-            <td><strong>${candidature.nom_entreprise}</strong></td>
-            <td>${candidature.titre_offre}</td>
-            <td>${dateCandidature}</td>
-            <td><span class="${classeStatut}">${texteStatut}</span></td>
-            <td>
-              <a href="/offre-details.html?id=${candidature.id_offre}" class="btn-view">Détails</a>
-            </td>
-          </tr>
-        `;
-
-        // 4. Injection dans le tableau
-        tbody.innerHTML += ligneHTML;
-      });
-    } else {
-      tbody.innerHTML = `<tr><td colspan="5" style="color: red; text-align: center;">Erreur : ${data.message}</td></tr>`;
-    }
-  } catch (error) {
-    console.error(
-      "Erreur de fetch lors du chargement des candidatures :",
-      error,
-    );
-    tbody.innerHTML = `<tr><td colspan="5" style="color: red; text-align: center;">Impossible de charger les données.</td></tr>`;
-  }
-}
-
-/* ==========================================================================
    AFFICHAGE DU CARNET DE STAGE (Format Cartes)
    ========================================================================== */
 async function chargerCarnetStage() {
@@ -849,92 +822,6 @@ async function chargerCarnetStage() {
     container.innerHTML =
       '<p style="color: red; text-align: center;">Erreur de chargement du carnet.</p>';
   }
-}
-
-/* ==========================================================================
-   GESTION DE L'AJOUT ET DE LA MODIFICATION DE STAGE (Modale)
-   ========================================================================== */
-async function configurerAjoutStage() {
-  const form = document.getElementById("form-ajouter-stage");
-  const msg = document.getElementById("msg-ajout");
-
-  if (!form) return;
-
-  // On utilise form.onsubmit au lieu de addEventListener pour éviter que l'action s'envoie en double !
-  form.onsubmit = async (e) => {
-    e.preventDefault(); // Empêche la page de se recharger
-
-    // 1. Récupération de l'ID (si vide = Ajout, si rempli = Modification)
-    const editId = document.getElementById("edit-id-stage").value;
-
-    // 2. Récupération du nom de l'entreprise
-    const selectEnt = document.getElementById("select-entreprise");
-    const inputManuel = document.getElementById("ajout-entreprise-manuel");
-    let entrepriseEnvoi = "";
-
-    if (selectEnt.value === "autre") {
-      entrepriseEnvoi = inputManuel.value;
-    } else {
-      entrepriseEnvoi = selectEnt.options[selectEnt.selectedIndex].text;
-    }
-
-    // 3. Préparation des données
-    const bodyData = {
-      entreprise: entrepriseEnvoi,
-      mission: document.getElementById("ajout-mission").value,
-      dateDebut: document.getElementById("ajout-debut").value,
-      dateFin: document.getElementById("ajout-fin").value,
-      tuteur: document.getElementById("ajout-tuteur").value,
-    };
-
-    // 4. LA MAGIE EST ICI : Choix de la route et de la méthode !
-    // Si editId existe, on tape sur /api/stage-effectue/ID avec la méthode PUT
-    // Sinon, on tape sur /api/stage-effectue avec la méthode POST
-    const url = editId
-      ? `/api/stage-effectue/${editId}`
-      : "/api/stage-effectue";
-    const methode = editId ? "PUT" : "POST";
-
-    if (msg) {
-      msg.textContent = "⏳ Enregistrement en cours...";
-      msg.style.color = "#888";
-    }
-
-    try {
-      // 5. On envoie au serveur
-      const response = await fetch(url, {
-        method: methode,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        if (msg) {
-          msg.textContent = "✅ " + data.message;
-          msg.style.color = "green";
-        }
-
-        // On attend 1 seconde pour que l'étudiant voie le message vert, puis on ferme et on actualise
-        setTimeout(() => {
-          fermerModalStage();
-          chargerCarnetStage(); // Magie : les cartes se mettent à jour toutes seules !
-        }, 1000);
-      } else {
-        if (msg) {
-          msg.textContent = "❌ " + data.message;
-          msg.style.color = "red";
-        }
-      }
-    } catch (err) {
-      console.error("Erreur validation stage :", err);
-      if (msg) {
-        msg.textContent = "❌ Impossible de joindre le serveur.";
-        msg.style.color = "red";
-      }
-    }
-  };
 }
 
 // Fonction pour remplir le menu déroulant
@@ -1094,105 +981,73 @@ async function rechercherOffres() {
   }
 }
 
-// Lancer une recherche vide au démarrage pour afficher toutes les offres par défaut
-document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("offres-container")) {
-    rechercherOffres();
-  }
-});
-
-// Optionnel : Lancer une recherche vide au démarrage pour afficher toutes les offres par défaut
-document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("offres-container")) {
-    rechercherOffres();
-  }
-});
-
 /* ==========================================================================
-   ENVOYER LA CANDIDATURE (Formulaire avec CV et Lettre)
+   SIGNALER UNE OFFRE (Page offre-details.html)
    ========================================================================== */
-const formCandidature = document.getElementById("form-candidature");
 
-if (formCandidature) {
-  formCandidature.onsubmit = async (e) => {
-    e.preventDefault(); // Empêche la page de se recharger
+function ouvrirModalSignalement() {
+  document.getElementById("msg-signalement").textContent = ""; // On vide les anciens messages
+  document.getElementById("modal-signalement").style.display = "flex";
+}
 
-    // 1. Récupération des éléments HTML avec les BONS IDs
-    const msg = document.getElementById("msg-candidature");
-    const idOffre = document.getElementById("candidature-id-offre").value;
-    const lettre = document.getElementById("lettre-motivation").value;
-    const cvInput = document.getElementById("cv-upload");
+function fermerModalSignalement() {
+  document.getElementById("modal-signalement").style.display = "none";
+}
 
-    // 2. Sécurité : On vérifie que l'input existe ET qu'un fichier a bien été choisi
-    if (!cvInput || !cvInput.files || cvInput.files.length === 0) {
-      if (msg) {
-        msg.textContent = "❌ Veuillez sélectionner un fichier pour votre CV.";
-        msg.style.color = "red";
-      }
-      return; // On arrête tout si pas de CV
-    }
+const formSignalement = document.getElementById("form-signalement");
+if (formSignalement) {
+  formSignalement.onsubmit = async (e) => {
+    e.preventDefault();
 
-    if (!idOffre) {
-      msg.textContent = "❌ Erreur interne : ID de l'offre manquant.";
-      msg.style.color = "red";
-      return;
-    }
+    // On récupère l'ID de l'offre dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const idOffre = urlParams.get("id");
 
-    // 3. Préparation du "paquet" de données
-    const formData = new FormData();
-    formData.append("idOffre", idOffre);
-    formData.append("lettreMotivation", lettre);
-    formData.append("cv", cvInput.files[0]);
+    if (!idOffre) return;
 
-    if (msg) {
-      msg.textContent = "⏳ Envoi de la candidature en cours...";
-      msg.style.color = "#888";
-    }
+    const msg = document.getElementById("msg-signalement");
+    const motif = document.getElementById("signalement-motif").value;
+    const description = document.getElementById(
+      "signalement-description",
+    ).value;
+
+    msg.textContent = "⏳ Envoi en cours...";
+    msg.style.color = "#888";
 
     try {
-      // 4. Envoi au serveur
-      const response = await fetch("/api/postuler", {
+      const response = await fetch("/api/signaler-offre", {
         method: "POST",
-        body: formData, // On laisse le navigateur gérer le Content-Type tout seul !
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idOffre, motif, description }),
       });
 
       const data = await response.json();
 
-      // 5. Gestion de la réponse
       if (data.success) {
-        if (msg) {
-          msg.textContent = "✅ " + data.message;
-          msg.style.color = "green";
-        }
+        msg.textContent = "✅ " + data.message;
+        msg.style.color = "green";
 
-        // On ferme la modale après 2 secondes et on recharge la page
         setTimeout(() => {
-          fermerModal(); // Assure-toi que cette fonction existe bien !
-          window.location.reload();
+          fermerModalSignalement();
+          formSignalement.reset(); // On vide le formulaire
         }, 2000);
       } else {
-        if (msg) {
-          msg.textContent = "❌ " + data.message;
-          msg.style.color = "red";
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la candidature :", error);
-      if (msg) {
-        msg.textContent = "❌ Erreur de connexion au serveur.";
+        msg.textContent = "❌ " + data.message;
         msg.style.color = "red";
       }
+    } catch (error) {
+      msg.textContent = "❌ Erreur de connexion au serveur.";
+      msg.style.color = "red";
     }
   };
 }
 
 // On lance les fonctions au chargement de la page
 document.addEventListener("DOMContentLoaded", () => {
+  rechercherOffres();
   chargerProfil();
   configurerModificationProfil();
   configurerChangementMdp();
-  chargerMesCandidatures();
-  chargerCarnetStage();
-  configurerAjoutStage();
   chargerListeEntreprises();
+  chargerCarnetStage();
 });

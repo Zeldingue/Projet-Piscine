@@ -822,8 +822,23 @@ a {
 }
 
 /* ==========================================================================
-   MODALE DE CANDIDATURE
-   ========================================================================== */
+MODALE DE CANDIDATURE
+========================================================================== */
+
+.btn-postuler {
+  width: 100%;
+  background: #586b33;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  transition: 0.2s;
+}
+
 .modal-overlay {
   display: none; /* Cachée par défaut */
   position: fixed;

@@ -12,20 +12,27 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="entreprise.css" />
-
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <!-- NAVBAR DYNAMIQUE (Identique sur tout le site) -->
     <nav class="navbar">
       <a href="/index.html" class="logo">StageFlow</a>
-
-      <!-- C'est ici que le JS va injecter les liens de l'entreprise -->
       <ul class="nav-links"></ul>
-
-      <!-- C'est ici que le JS va injecter "Nom Entreprise 🏢" -->
-      <a href="/entreprise/entreprise-profil.html" class="btn-account"> </a>
+      <a href="/entreprise/entreprise-profil.html" class="btn-account"></a>
     </nav>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Candidatures reçues</h3>
+        <div class="number" id="stat-candidatures">...</div>
+      </div>
+
+      <div class="stat-card">
+        <h3>Offres actives</h3>
+        <div class="number" id="stat-actives">...</div>
+      </div>
+    </div>
+
     <div class="container">
       <div class="header-flex">
         <div>
@@ -38,6 +45,7 @@
           >+ Créer une offre</a
         >
       </div>
+
       <table class="data-table">
         <thead>
           <tr>
@@ -48,27 +56,123 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="table-offres-body">
           <tr>
-            <td><strong>Développeur Node.js</strong></td>
-            <td>15 Mai - 10 Juil</td>
-            <td>
-              <a href="entreprise-candidatures.html" class="badge"
-                >3 nouveaux</a
-              >
-            </td>
-            <td>En ligne</td>
-            <td class="action-btns">
-              <a href="entreprise-candidatures.html">Candidats</a>
-              <a href="entreprise-nouvelle-offre.html">Modifier</a>
-              <a href="#" style="color: #dc3545">Supprimer</a>
+            <td
+              colspan="5"
+              style="text-align: center; padding: 2rem; color: #888"
+            >
+              <i class="fa-solid fa-spinner fa-spin"></i> Chargement de vos
+              offres...
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!-- FOOTER DYNAMIQUE -->
+
+    <div id="modal-edit-offre" class="modal-overlay" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Modifier l'offre</h2>
+          <button class="btn-close-modal" onclick="fermerModalEditOffre()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="form-edit-offre">
+            <input type="hidden" id="edit-id-offre" value="" />
+
+            <div class="form-group">
+              <label>Titre de la mission *</label>
+              <input
+                type="text"
+                id="edit-titre"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="row">
+              <div class="col form-group">
+                <label>Date de début *</label>
+                <input
+                  type="date"
+                  id="edit-date-debut"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="col form-group">
+                <label>Date de fin *</label>
+                <input
+                  type="date"
+                  id="edit-date-fin"
+                  class="form-control"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Nom du tuteur</label>
+              <input type="text" id="edit-tuteur" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label>Description de la mission *</label>
+              <textarea
+                id="edit-mission"
+                class="form-control"
+                required
+                style="min-height: 120px"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Statut de l'offre</label>
+              <select id="edit-statut" class="form-control">
+                <option value="active">
+                  En ligne (Visible par les étudiants)
+                </option>
+                <option value="inactive">Inactif (Pourvue ou annulée)</option>
+              </select>
+            </div>
+
+            <div
+              id="msg-edit-offre"
+              style="text-align: center; font-weight: bold; margin-top: 10px"
+            ></div>
+
+            <div
+              class="modal-actions"
+              style="margin-top: 2rem; display: flex; gap: 1rem"
+            >
+              <button type="submit" class="btn-submit" style="flex: 2">
+                Enregistrer les modifications
+              </button>
+              <button
+                type="button"
+                class="btn-cancel-modal"
+                onclick="fermerModalEditOffre()"
+                style="
+                  flex: 1;
+                  padding: 1rem;
+                  border: 1px solid #ddd;
+                  background: white;
+                  border-radius: 8px;
+                  cursor: pointer;
+                "
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     <footer id="footer-dynamique" class="site-footer"></footer>
+
     <script src="../script.js"></script>
+    <script src="entreprise.js"></script>
   </body>
 </html>

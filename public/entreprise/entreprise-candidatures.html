@@ -15,56 +15,78 @@
     <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <!-- NAVBAR DYNAMIQUE (Identique sur tout le site) -->
     <nav class="navbar">
       <a href="/index.html" class="logo">StageFlow</a>
-
-      <!-- C'est ici que le JS va injecter les liens de l'entreprise -->
       <ul class="nav-links"></ul>
-
-      <!-- C'est ici que le JS va injecter "Nom Entreprise 🏢" -->
-      <a href="/entreprise/entreprise-profil.html" class="btn-account"> </a>
+      <a href="/entreprise/entreprise-profil.html" class="btn-account"></a>
     </nav>
+
     <div class="container">
-      <div class="header-info">
-        <div style="color: #586b33; font-weight: 600">Offre #001</div>
-        <h2>Développeur Back-End Node.js</h2>
+      <div class="header-info" style="margin-bottom: 2rem">
+        <div id="header-offre-id" style="color: #586b33; font-weight: 600">
+          Chargement...
+        </div>
+        <h2 id="header-offre-titre">Recherche des candidatures...</h2>
       </div>
+
       <table class="data-table">
         <thead>
           <tr>
             <th>Candidat</th>
             <th>Formation</th>
             <th>Date</th>
-            <th>CV</th>
+            <th>CV / Lettre</th>
             <th>Statut</th>
             <th>Décision</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="table-candidatures-body">
           <tr>
-            <td>
-              <strong>Alice Martin</strong><br /><span
-                style="font-size: 0.85rem; color: #666"
-                >alice@email.com</span
-              >
-            </td>
-            <td>BTS SIO SLAM</td>
-            <td>12/04</td>
-            <td><a href="#" class="btn-action btn-view">Voir CV</a></td>
-            <td>
-              <span style="font-weight: 600; color: #856404">En attente</span>
-            </td>
-            <td>
-              <a href="#" class="btn-action btn-accept">Accepter</a>
-              <a href="#" class="btn-action btn-reject">Refuser</a>
+            <td colspan="6" style="text-align: center; padding: 2rem">
+              <i class="fa-solid fa-spinner fa-spin"></i> Récupération des
+              données...
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <!-- FOOTER DYNAMIQUE -->
+    <div id="modal-lettre" class="modal-overlay" style="display: none">
+      <div class="modal-content" style="max-width: 600px">
+        <div class="modal-header">
+          <h2>Lettre de motivation</h2>
+          <button
+            class="btn-close-modal"
+            onclick="fermerModalLettre()"
+            style="
+              background: none;
+              border: none;
+              font-size: 1.5rem;
+              cursor: pointer;
+            "
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p
+            id="contenu-lettre"
+            style="
+              white-space: pre-wrap;
+              line-height: 1.6;
+              color: #444;
+              padding: 1rem;
+              background: #f9f9f9;
+              border-radius: 8px;
+              border: 1px solid #eaeaea;
+            "
+          ></p>
+        </div>
+      </div>
+    </div>
+
     <footer id="footer-dynamique" class="site-footer"></footer>
+
     <script src="../script.js"></script>
+    <script src="entreprise.js"></script>
   </body>
 </html>

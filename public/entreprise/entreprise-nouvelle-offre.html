@@ -35,7 +35,7 @@
       >
         Publier une offre de stage
       </h1>
-      <form action="entreprise-dashboard.html">
+      <form id="form-nouvelle-offre" class="form-nouvelle-offre">
         <div class="form-group">
           <label>Titre de la mission *</label>
           <input
@@ -43,16 +43,17 @@
             class="form-control"
             placeholder="Ex: Développeur Web Front-End (H/F)"
             required
+            id="titre"
           />
         </div>
         <div class="row">
           <div class="col form-group">
             <label>Date de début *</label
-            ><input type="date" class="form-control" required />
+            ><input type="date" class="form-control" id="date-debut" required />
           </div>
           <div class="col form-group">
             <label>Date de fin *</label
-            ><input type="date" class="form-control" required />
+            ><input type="date" class="form-control" id="date-fin" required />
           </div>
         </div>
         <div class="form-group">
@@ -61,6 +62,7 @@
             type="text"
             class="form-control"
             placeholder="Ex: Jean Dupont"
+            id="tuteur"
           />
         </div>
         <div class="form-group">
@@ -69,8 +71,18 @@
             class="form-control"
             placeholder="Décrivez les tâches..."
             required
+            id="mission"
           ></textarea>
         </div>
+        <div
+          id="msg-ajout"
+          style="
+            margin-bottom: 1rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-align: center;
+          "
+        ></div>
         <button type="submit" class="btn-submit">Publier l'offre</button>
         <a href="entreprise-dashboard.html" class="btn-cancel">Annuler</a>
       </form>
@@ -78,5 +90,6 @@
     <!-- FOOTER DYNAMIQUE -->
     <footer id="footer-dynamique" class="site-footer"></footer>
     <script src="../script.js"></script>
+    <script src="entreprise.js"></script>
   </body>
 </html>

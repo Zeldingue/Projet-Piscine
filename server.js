@@ -16,6 +16,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// On autorise l'accès public au dossier des CV
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // 4. CONFIGURATION DE MULTER POUR LES CV
 const cvDir = path.join(__dirname, "uploads", "cvs");
 if (!fs.existsSync(cvDir)) {
@@ -73,6 +76,19 @@ app.get("/api/test-etudiants", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : VÉRIFIER LA SESSION (Pour protéger les pages)
+// ==========================================================================
+app.get("/api/auth/status", (req, res) => {
+  if (req.session && req.session.userId) {
+    // Si une session existe
+    res.json({ loggedIn: true, role: req.session.role });
+  } else {
+    // Si personne n'est connecté
+    res.json({ loggedIn: false });
   }
 });
 
@@ -797,12 +813,10 @@ app.post("/api/postuler", uploadCV.single("cv"), async (req, res) => {
   try {
     // 1. Vérifions si l'étudiant est bien connecté
     if (req.session.role !== "etudiant" || !req.session.userId) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Vous devez être connecté pour postuler.",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Vous devez être connecté pour postuler.",
+      });
     }
 
     // 2. On récupère TOUTES les infos, y compris la lettre !
@@ -828,15 +842,284 @@ app.post("/api/postuler", uploadCV.single("cv"), async (req, res) => {
     res.json({ success: true, message: "Candidature envoyée avec succès !" });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Vous avez déjà postulé à cette offre !",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Vous avez déjà postulé à cette offre !",
+      });
     }
     // C'EST ICI QUE L'ERREUR 500 S'AFFICHE DANS TON TERMINAL
     console.error("Erreur candidature :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : AJOUTER UNE OFFRE DE STAGE (Entreprise)
+// ==========================================================================
+app.post("/api/ajouter-offre", async (req, res) => {
+  try {
+    // Sécurité : on vérifie que c'est bien une entreprise connectée
+    if (req.session.role !== "entreprise" || !req.session.userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Vous n'êtes pas connecté." });
+    }
+
+    // J'ai mis date_publication (qui prend CURDATE()) à la fin pour que ça matche tes valeurs
+    const query = `
+      INSERT INTO offre 
+      (id_entreprise, titre_offre, mission, date_debut, date_fin, tuteur_nom, date_publication, statut) 
+      VALUES (?, ?, ?, ?, ?, ?, CURDATE(), 'active')
+    `;
+
+    await db.query(query, [
+      req.session.userId,
+      req.body.titre,
+      req.body.mission,
+      req.body.dateDebut,
+      req.body.dateFin,
+      req.body.tuteur,
+    ]);
+
+    res.json({ success: true, message: "Offre publiée avec succès !" });
+  } catch (error) {
+    console.error("Erreur ajout offre :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : RÉCUPÉRER LES OFFRES DE L'ENTREPRISE (Dashboard)
+// ==========================================================================
+app.get("/api/mes-offres", async (req, res) => {
+  try {
+    // On vérifie que c'est bien une entreprise
+    if (req.session.role !== "entreprise" || !req.session.userId) {
+      return res.status(401).json({ success: false, message: "Non autorisé" });
+    }
+
+    // Requête SQL : On récupère les offres ET on compte les candidatures
+    const query = `
+      SELECT o.*, COUNT(p.id_etudiant) AS nb_candidats
+      FROM offre o
+      LEFT JOIN postule p ON o.id_offre = p.id_offre
+      WHERE o.id_entreprise = ?
+      GROUP BY o.id_offre
+      ORDER BY o.date_publication DESC
+    `;
+
+    const [offres] = await db.query(query, [req.session.userId]);
+
+    res.json({ success: true, data: offres });
+  } catch (error) {
+    console.error("Erreur récupération du dashboard entreprise :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : MODIFIER UNE OFFRE (Entreprise)
+// ==========================================================================
+app.put("/api/offre/:id", async (req, res) => {
+  try {
+    if (req.session.role !== "entreprise" || !req.session.userId) {
+      return res.status(401).json({ success: false });
+    }
+
+    const idOffre = req.params.id;
+    const { titre, dateDebut, dateFin, tuteur, mission, statut } = req.body;
+
+    // 1. On met à jour les informations de l'offre
+    await db.query(
+      "UPDATE offre SET titre_offre=?, date_debut=?, date_fin=?, tuteur_nom=?, mission=?, statut=? WHERE id_offre=? AND id_entreprise=?",
+      [
+        titre,
+        dateDebut,
+        dateFin,
+        tuteur,
+        mission,
+        statut,
+        idOffre,
+        req.session.userId,
+      ],
+    );
+
+    // 2. LA NOUVEAUTÉ EST ICI : Si l'entreprise passe l'offre en "inactive"
+    if (statut === "inactive") {
+      // On met à jour la table "postule" pour cette offre.
+      // On passe tout le monde en "Refusé", SAUF ceux qui ont déjà le statut "Accepté"
+      await db.query(
+        "UPDATE postule SET statut = 'Refusé' WHERE id_offre = ? AND statut != 'Accepté'",
+        [idOffre],
+      );
+    }
+
+    res.json({ success: true, message: "Offre mise à jour !" });
+  } catch (error) {
+    console.error("Erreur modification offre :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : SUPPRIMER UNE OFFRE (Entreprise)
+// ==========================================================================
+app.delete("/api/offre/:id", async (req, res) => {
+  try {
+    if (req.session.role !== "entreprise" || !req.session.userId)
+      return res.status(401).json({ success: false });
+
+    await db.query("DELETE FROM offre WHERE id_offre=? AND id_entreprise=?", [
+      req.params.id,
+      req.session.userId,
+    ]);
+    res.json({ success: true, message: "Offre supprimée." });
+  } catch (error) {
+    // Si l'offre a déjà des candidatures, MySQL bloque la suppression (Clé étrangère)
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Impossible : des étudiants ont postulé à cette offre. Modifiez plutôt son statut en 'Inactif'.",
+      });
+    }
+    console.error("Erreur suppression offre :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : RÉCUPÉRER LES CANDIDATURES D'UNE OFFRE
+// ==========================================================================
+app.get("/api/offre/:id/candidatures", async (req, res) => {
+  try {
+    if (req.session.role !== "entreprise" || !req.session.userId)
+      return res.status(401).json({ success: false });
+
+    const idOffre = req.params.id;
+
+    // 1. On récupère les infos de l'offre (pour le titre) et on vérifie qu'elle appartient bien à l'entreprise
+    const [offre] = await db.query(
+      "SELECT * FROM offre WHERE id_offre = ? AND id_entreprise = ?",
+      [idOffre, req.session.userId],
+    );
+    if (offre.length === 0)
+      return res.status(403).json({ success: false, message: "Accès refusé" });
+
+    // 2. On récupère les candidats (Jointure entre postule et etudiant)
+    const query = `
+      SELECT p.*, e.nom_etudiant, e.prenom_etudiant, e.email_etudiant, e.formation_etudiant
+      FROM postule p
+      JOIN etudiant e ON p.id_etudiant = e.id_etudiant
+      WHERE p.id_offre = ?
+      ORDER BY p.date_candidature DESC
+    `;
+    const [candidatures] = await db.query(query, [idOffre]);
+
+    res.json({ success: true, offre: offre[0], candidatures });
+  } catch (error) {
+    console.error("Erreur récupération candidatures :", error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTE : ACCEPTER OU REFUSER UN CANDIDAT
+// ==========================================================================
+app.put("/api/candidature/:idOffre/:idEtudiant", async (req, res) => {
+  try {
+    if (req.session.role !== "entreprise" || !req.session.userId)
+      return res.status(401).json({ success: false });
+
+    const { idOffre, idEtudiant } = req.params;
+    const { statut } = req.body; // 'Accepté' ou 'Refusé'
+
+    // 1. On met à jour le statut dans la table postule
+    await db.query(
+      "UPDATE postule SET statut = ? WHERE id_offre = ? AND id_etudiant = ?",
+      [statut, idOffre, idEtudiant],
+    );
+
+    // 2. Si l'étudiant est accepté, on l'assigne officiellement à l'offre !
+    if (statut === "Accepté") {
+      await db.query("UPDATE offre SET id_etudiant = ? WHERE id_offre = ?", [
+        idEtudiant,
+        idOffre,
+      ]);
+    }
+
+    res.json({ success: true, message: `Candidature passée en : ${statut}` });
+  } catch (error) {
+    console.error("Erreur MAJ statut :", error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTE : STATISTIQUES DU DASHBOARD ENTREPRISE
+// ==========================================================================
+app.get("/api/entreprise/stats", async (req, res) => {
+  try {
+    if (req.session.role !== "entreprise" || !req.session.userId) {
+      return res.status(401).json({ success: false });
+    }
+
+    const idEntreprise = req.session.userId;
+
+    // 1. Compter les offres actives
+    const [[{ total_actives }]] = await db.query(
+      "SELECT COUNT(*) AS total_actives FROM offre WHERE id_entreprise = ? AND statut = 'active'",
+      [idEntreprise],
+    );
+
+    // 2. Compter TOUTES les candidatures reçues par cette entreprise (Jointure)
+    const [[{ total_candidatures }]] = await db.query(
+      "SELECT COUNT(p.id_etudiant) AS total_candidatures FROM postule p JOIN offre o ON p.id_offre = o.id_offre WHERE o.id_entreprise = ?",
+      [idEntreprise],
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        actives: total_actives,
+        candidatures: total_candidatures,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur stats entreprise :", error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTE : SIGNALER UNE OFFRE
+// ==========================================================================
+app.post("/api/signaler-offre", async (req, res) => {
+  try {
+    // Il faut être connecté pour signaler (pour éviter le spam)
+    if (!req.session.userId) {
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "Vous devez être connecté pour signaler une offre.",
+        });
+    }
+
+    const { idOffre, motif, description } = req.body;
+    const dateSignalement = new Date().toISOString().split("T")[0];
+
+    await db.query(
+      "INSERT INTO signalement (id_offre, id_utilisateur, motif, description, date_signalement) VALUES (?, ?, ?, ?, ?)",
+      [idOffre, req.session.userId, motif, description, dateSignalement],
+    );
+
+    res.json({
+      success: true,
+      message: "Merci, votre signalement a été pris en compte.",
+    });
+  } catch (error) {
+    console.error("Erreur lors du signalement :", error);
     res.status(500).json({ success: false, message: "Erreur serveur" });
   }
 });
