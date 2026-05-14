@@ -105,7 +105,7 @@ async function chargerMenuDynamique() {
             <li><a href="/admin/admin-dashboard.html">Tableau de bord</a></li>
             <li><a href="/recherche.html">Recherche d'Offres</a></li>
                 <li><a href="/admin/admin-utilisateurs.html">Gestion des utilisateurs</a></li>
-                <li><a href="/admin/admin-offres.html">Offres signalées</a></li>
+                <li><a href="/admin/offres.html">Gestion des offres</a></li>
           `;
           btnAccount.innerHTML = `${session.nom} <i class="fa-solid fa-shield-halved"></i>`;
           btnAccount.href = "/admin/admin-profil.html";
@@ -160,7 +160,7 @@ async function chargerMenuDynamique() {
               <h4>Modération</h4>
               <ul>
                 <li><a href="/admin/admin-utilisateurs.html">Gestion des utilisateurs</a></li>
-                <li><a href="/admin/admin-offres.html">Offres signalées</a></li>
+                <li><a href="/admin/offres.html">Gestion des offres</a></li>
                 <li><a href="/admin/historique-bans.html">Historique des bannissements</a></li>
               </ul>
             </div>

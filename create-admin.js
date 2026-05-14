@@ -12,10 +12,10 @@ async function creerPremierAdmin() {
     });
 
     // 2. Les infos de ton admin
-    const nom = "Boss";
-    const prenom = "Admin";
-    const email = "admin@stageflow.fr";
-    const mdpEnClair = "admin123"; // Le mot de passe facile pour tes tests
+    const nom = "Boss2";
+    const prenom = "Admin2";
+    const email = "admin2@stageflow.fr";
+    const mdpEnClair = "admin"; // Le mot de passe facile pour tes tests
 
     // 3. On hash le mot de passe
     const hash = await bcrypt.hash(mdpEnClair, 10);

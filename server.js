@@ -235,7 +235,7 @@ app.post("/api/register/entreprise", async (req, res) => {
   }
 });
 
-// --- ROUTE : CONNEXION (LOGIN) AVEC ALERT ---
+// --- ROUTE : CONNEXION (LOGIN) CORRIGÉE ---
 app.post("/api/login", async (req, res) => {
   try {
     const { email, mdp } = req.body;
@@ -251,6 +251,20 @@ app.post("/api/login", async (req, res) => {
       const match = await bcrypt.compare(mdp, user.mdp_etudiant);
 
       if (match) {
+        // VÉRIFICATION DU BANNISSEMENT ÉTUDIANT
+        const [banCheck] = await db.query(
+          "SELECT motif FROM bannissement WHERE id_etudiant = ?",
+          [user.id_etudiant],
+        );
+
+        if (banCheck.length > 0) {
+          return res.status(403).json({
+            success: false,
+            message: `Accès refusé. Votre compte étudiant a été banni pour le motif suivant : ${banCheck[0].motif}, \n Merci de contacter le support pour plus d'informations.`,
+          });
+        }
+
+        // Si non banni, on crée la session
         req.session.userId = user.id_etudiant;
         req.session.role = "etudiant";
         req.session.nom = user.prenom_etudiant;
@@ -274,6 +288,19 @@ app.post("/api/login", async (req, res) => {
       const match = await bcrypt.compare(mdp, user.mdp_entreprise);
 
       if (match) {
+        // VÉRIFICATION DU BANNISSEMENT ENTREPRISE
+        const [banCheck] = await db.query(
+          "SELECT motif FROM bannissement WHERE id_entreprise = ?",
+          [user.id_entreprise],
+        );
+
+        if (banCheck.length > 0) {
+          return res.status(403).json({
+            success: false,
+            message: `Accès refusé. Le compte de votre entreprise a été banni. Motif : ${banCheck[0].motif} \n Merci de contacter le support pour plus d'informations.`,
+          });
+        }
+
         req.session.userId = user.id_entreprise;
         req.session.role = "entreprise";
         req.session.nom = user.nom_entreprise;
@@ -309,7 +336,7 @@ app.post("/api/login", async (req, res) => {
       }
     }
 
-    // 4. Si aucune correspondance trouvée (Mauvais MDP ou Email)
+    // 4. Si aucune correspondance trouvée
     res.status(401).json({
       success: false,
       message: "Erreur : Email ou mot de passe incorrect.",
@@ -962,29 +989,80 @@ app.put("/api/offre/:id", async (req, res) => {
 });
 
 // ===========================================================================
-// ROUTE : SUPPRIMER UNE OFFRE (Entreprise)
+// ROUTE : MODIFIER UNE OFFRE (Entreprise) - Version Haute Sécurité
 // ==========================================================================
-app.delete("/api/offre/:id", async (req, res) => {
+app.put("/api/offre/:id", async (req, res) => {
   try {
-    if (req.session.role !== "entreprise" || !req.session.userId)
-      return res.status(401).json({ success: false });
+    // 1. Vérification de la session
+    if (req.session.role !== "entreprise" || !req.session.userId) {
+      return res.status(401).json({ success: false, message: "Non autorisé." });
+    }
 
-    await db.query("DELETE FROM offre WHERE id_offre=? AND id_entreprise=?", [
-      req.params.id,
-      req.session.userId,
-    ]);
-    res.json({ success: true, message: "Offre supprimée." });
-  } catch (error) {
-    // Si l'offre a déjà des candidatures, MySQL bloque la suppression (Clé étrangère)
-    if (error.code === "ER_ROW_IS_REFERENCED_2") {
-      return res.status(400).json({
+    const idOffre = req.params.id;
+    const idEntreprise = req.session.userId;
+    const { titre, dateDebut, dateFin, tuteur, mission, statut } = req.body;
+
+    // 2. SÉCURITÉ ANTI-TRICHE : On récupère l'état actuel de l'offre en BDD
+    const [offreActuelleRows] = await db.query(
+      "SELECT statut FROM offre WHERE id_offre = ? AND id_entreprise = ?",
+      [idOffre, idEntreprise],
+    );
+
+    // Si l'offre n'existe pas ou n'appartient pas à cette entreprise
+    if (offreActuelleRows.length === 0) {
+      return res.status(404).json({
         success: false,
-        message:
-          "Impossible : des étudiants ont postulé à cette offre. Modifiez plutôt son statut en 'Inactif'.",
+        message: "Offre introuvable ou accès refusé.",
       });
     }
-    console.error("Erreur suppression offre :", error);
-    res.status(500).json({ success: false, message: "Erreur serveur" });
+
+    const offreActuelle = offreActuelleRows[0];
+
+    // 3. Vérification du blocage par l'admin
+    if (offreActuelle.statut === "bloquée") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Action refusée : Cette offre a été bloquée par la modération. Vous ne pouvez plus la modifier.",
+      });
+    }
+
+    // 4. Empêcher l'entreprise de s'auto-bloquer en manipulant le code HTML/JS
+    let nouveauStatut = statut;
+    if (nouveauStatut === "bloquée") {
+      nouveauStatut = offreActuelle.statut; // On annule sa tentative et on garde l'ancien statut
+    }
+
+    // 5. Mise à jour des informations de l'offre
+    await db.query(
+      "UPDATE offre SET titre_offre=?, date_debut=?, date_fin=?, tuteur_nom=?, mission=?, statut=? WHERE id_offre=? AND id_entreprise=?",
+      [
+        titre,
+        dateDebut,
+        dateFin,
+        tuteur,
+        mission,
+        nouveauStatut,
+        idOffre,
+        idEntreprise,
+      ],
+    );
+
+    // 6. LOGIQUE MÉTIER : Si l'entreprise passe l'offre en "inactive"
+    // On refuse automatiquement les étudiants en attente, sauf ceux déjà acceptés
+    if (nouveauStatut === "inactive" && offreActuelle.statut !== "inactive") {
+      await db.query(
+        "UPDATE postule SET statut = 'Refusé' WHERE id_offre = ? AND statut != 'Accepté'",
+        [idOffre],
+      );
+    }
+
+    res.json({ success: true, message: "Offre mise à jour avec succès !" });
+  } catch (error) {
+    console.error("Erreur modification offre :", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erreur serveur interne." });
   }
 });
 
@@ -1098,12 +1176,10 @@ app.post("/api/signaler-offre", async (req, res) => {
   try {
     // Il faut être connecté pour signaler (pour éviter le spam)
     if (!req.session.userId) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Vous devez être connecté pour signaler une offre.",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Vous devez être connecté pour signaler une offre.",
+      });
     }
 
     const { idOffre, motif, description } = req.body;
@@ -1120,6 +1196,267 @@ app.post("/api/signaler-offre", async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur lors du signalement :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : STATISTIQUES DU DASHBOARD ADMIN
+// ==========================================================================
+app.get("/api/admin/stats", async (req, res) => {
+  try {
+    // Sécurité : On vérifie que c'est bien un administrateur connecté
+    if (req.session.role !== "admin" || !req.session.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Accès refusé. Réservé aux administrateurs.",
+      });
+    }
+
+    // 1. Compter tous les étudiants
+    const [[{ total_etudiants }]] = await db.query(
+      "SELECT COUNT(*) AS total_etudiants FROM etudiant",
+    );
+
+    // 2. Compter toutes les entreprises
+    const [[{ total_entreprises }]] = await db.query(
+      "SELECT COUNT(*) AS total_entreprises FROM entreprise",
+    );
+
+    // 3. Compter les offres actives (en ligne)
+    const [[{ total_offres }]] = await db.query(
+      "SELECT COUNT(*) AS total_offres FROM offre WHERE statut = 'active'",
+    );
+
+    // 4. Compter les signalements à traiter (En attente)
+    const [[{ total_signalements }]] = await db.query(
+      "SELECT COUNT(*) AS total_signalements FROM signalement WHERE statut = 'En attente'",
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        etudiants: total_etudiants,
+        entreprises: total_entreprises,
+        offres: total_offres,
+        signalements: total_signalements,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur stats admin :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTES ADMIN : GESTION DES UTILISATEURS
+// ==========================================================================
+
+// Récupérer tous les utilisateurs (Étudiants + Entreprises) et vérifier s'ils sont bannis
+app.get("/api/admin/utilisateurs", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    // 1. Récupération des étudiants
+    const [etudiants] = await db.query(`
+      SELECT id_etudiant AS id, 'etudiant' AS type, nom_etudiant AS nom, prenom_etudiant AS prenom, email_etudiant AS email, formation_etudiant AS detail_formation, NULL AS detail_contact 
+      FROM etudiant
+    `);
+
+    // 2. Récupération des entreprises
+    const [entreprises] = await db.query(`
+      SELECT id_entreprise AS id, 'entreprise' AS type, nom_entreprise AS nom, NULL AS prenom, email_entreprise AS email, NULL AS detail_formation, nom_contact AS detail_contact 
+      FROM entreprise
+    `);
+
+    // 3. Récupération des bannissements actifs
+    const [bans] = await db.query(
+      "SELECT id_etudiant, id_entreprise FROM bannissement",
+    );
+
+    // 4. Fusion et ajout du statut (Actif ou Banni)
+    const utilisateurs = [...etudiants, ...entreprises].map((u) => {
+      // On regarde si l'ID de cet utilisateur est dans la table bannissement
+      const isBanni =
+        u.type === "etudiant"
+          ? bans.some((b) => b.id_etudiant === u.id)
+          : bans.some((b) => b.id_entreprise === u.id);
+
+      return { ...u, statut: isBanni ? "Banni" : "Actif" };
+    });
+
+    res.json({ success: true, utilisateurs });
+  } catch (error) {
+    console.error("Erreur récupération utilisateurs :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// Bannir un utilisateur
+app.post("/api/admin/ban", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    const { id, type, motif } = req.body;
+    const idAdmin = req.session.userId; // L'admin qui exécute la sanction
+
+    if (type === "etudiant") {
+      await db.query(
+        "INSERT INTO bannissement (id_admin, id_etudiant, motif) VALUES (?, ?, ?)",
+        [idAdmin, id, motif],
+      );
+    } else {
+      await db.query(
+        "INSERT INTO bannissement (id_admin, id_entreprise, motif) VALUES (?, ?, ?)",
+        [idAdmin, id, motif],
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erreur lors du bannissement :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// Débannir un utilisateur (Supprimer la ligne de la table bannissement)
+app.delete("/api/admin/ban/:type/:id", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    const { type, id } = req.params;
+    if (type === "etudiant") {
+      await db.query("DELETE FROM bannissement WHERE id_etudiant = ?", [id]);
+    } else {
+      await db.query("DELETE FROM bannissement WHERE id_entreprise = ?", [id]);
+    }
+    res.json({ success: true, message: "Utilisateur débanni." });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTES ADMIN : MODÉRATION DES OFFRES
+// ==========================================================================
+
+// Récupérer toutes les offres avec le décompte des signalements
+app.get("/api/admin/offres", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    const query = `
+      SELECT o.*, e.nom_entreprise, COUNT(s.id_signalement) AS nb_signalements
+      FROM offre o
+      JOIN entreprise e ON o.id_entreprise = e.id_entreprise
+      LEFT JOIN signalement s ON o.id_offre = s.id_offre
+      GROUP BY o.id_offre
+      ORDER BY nb_signalements DESC, o.date_publication DESC
+    `;
+
+    const [offres] = await db.query(query);
+    res.json({ success: true, offres });
+  } catch (error) {
+    console.error("Erreur récupération offres admin :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// Bloquer une offre
+app.put("/api/admin/offre/:id/block", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    // On passe l'offre en "bloquée".
+    // Si tu avais ajouté la colonne motif_blocage, on l'ajouterait ici !
+    await db.query("UPDATE offre SET statut = 'bloquée' WHERE id_offre = ?", [
+      req.params.id,
+    ]);
+
+    res.json({ success: true, message: "Offre bloquée." });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// Débloquer une offre
+app.put("/api/admin/offre/:id/unblock", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    await db.query("UPDATE offre SET statut = 'active' WHERE id_offre = ?", [
+      req.params.id,
+    ]);
+    res.json({ success: true, message: "Offre débloquée." });
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTE ADMIN : VOIR LES SIGNALEMENTS D'UNE OFFRE
+// ==========================================================================
+app.get("/api/admin/offre/:id/signalements", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    // On fait une jointure pour récupérer le nom de l'étudiant qui a signalé
+    const query = `
+      SELECT s.*, e.nom_etudiant, e.prenom_etudiant
+      FROM signalement s
+      JOIN etudiant e ON s.id_utilisateur = e.id_etudiant
+      WHERE s.id_offre = ?
+      ORDER BY s.date_signalement DESC
+    `;
+
+    const [signalements] = await db.query(query, [req.params.id]);
+    res.json({ success: true, signalements });
+  } catch (error) {
+    console.error("Erreur récupération signalements :", error);
+    res.status(500).json({ success: false });
+  }
+});
+
+// ===========================================================================
+// ROUTE ADMIN : HISTORIQUE DES BANNISSEMENTS
+// ==========================================================================
+app.get("/api/admin/historique-bans", async (req, res) => {
+  try {
+    if (req.session.role !== "admin")
+      return res.status(401).json({ success: false });
+
+    // La magie du UNION : on combine deux requêtes différentes en un seul résultat !
+    const query = `
+      SELECT 
+        b.id_ban, b.date_bannissement, b.motif, b.date_fin,
+        'etudiant' AS type, e.id_etudiant AS id_utilisateur, 
+        e.nom_etudiant AS nom, e.prenom_etudiant AS prenom, e.email_etudiant AS email
+      FROM bannissement b
+      JOIN etudiant e ON b.id_etudiant = e.id_etudiant
+      
+      UNION
+      
+      SELECT 
+        b.id_ban, b.date_bannissement, b.motif, b.date_fin,
+        'entreprise' AS type, ent.id_entreprise AS id_utilisateur, 
+        ent.nom_entreprise AS nom, NULL AS prenom, ent.email_entreprise AS email
+      FROM bannissement b
+      JOIN entreprise ent ON b.id_entreprise = ent.id_entreprise
+      
+      ORDER BY date_bannissement DESC
+    `;
+
+    const [historique] = await db.query(query);
+    res.json({ success: true, historique });
+  } catch (error) {
+    console.error("Erreur historique bans :", error);
     res.status(500).json({ success: false, message: "Erreur serveur" });
   }
 });
