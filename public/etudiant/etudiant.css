@@ -246,6 +246,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -495,6 +496,7 @@ textarea.form-control {
   justify-content: space-between;
   align-items: center;
 }
+
 .stage-dates {
   background: #f4f4f4;
   padding: 0.5rem 1rem;
@@ -503,6 +505,7 @@ textarea.form-control {
   font-weight: 600;
   color: #555;
 }
+
 .stage-card .actions a {
   color: #586b33;
   margin-left: 1rem;
@@ -513,7 +516,7 @@ textarea.form-control {
 .btn-view {
   color: #586b33;
   border: none;
-  padding: 0.8rem 1.5rem;
+  padding: 0.8rem 0.5rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -521,4 +524,17 @@ textarea.form-control {
 
 .btn-view:hover {
   background: #f0f0f0;
+}
+
+.btn-cancel {
+  color: #d93025;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0.8rem 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #f8d7da;
 }

@@ -284,57 +284,83 @@ function ouvrirModal() {
   if (modal) modal.style.display = "flex";
 }
 function fermerModal() {
-  document.getElementById("modal-postuler").classList.remove("active");
-  document.body.style.overflow = "auto";
+  const modal = document.getElementById("modal-postuler");
+  if (modal) modal.style.display = "none";
+
+  const form = document.getElementById("form-postuler");
+  if (form) form.reset(); // On vide les champs uniquement si le formulaire est bien trouvé
+
+  // On remet l'affichage par défaut (Texte) sans faire planter le reste
+  try {
+    basculerLettre();
+  } catch (erreur) {
+    console.error("Petite erreur sur basculerLettre, mais la modale est fermée :", erreur);
+  }
 }
 
-function updateFileName(input) {
-  const textSpan = document.getElementById("upload-text");
-  const dropZone = document.getElementById("upload-zone");
-  const icon = document.getElementById("upload-icon");
+// BONUS UX : Fermer la modale si l'utilisateur clique sur le fond gris (à l'extérieur)
+window.addEventListener("click", function (event) {
+  const modal = document.getElementById("modal-postuler");
+  if (event.target === modal) {
+    fermerModal();
+  }
+});
+
+function updateFileName(input, texteParDefaut) {
+  // 1. On trouve le conteneur parent global de CET input spécifiquement
+  const container = input.closest('.custom-file-upload');
+
+  // 2. On cible les éléments à l'intérieur de CE conteneur uniquement
+  const dropZone = container.querySelector('.upload-zone');
+  const textSpan = container.querySelector('.upload-text');
+  const icon = container.querySelector('.upload-icon');
 
   const allowedExtensions = [".pdf", ".doc", ".docx", ".txt"];
 
   if (input.files && input.files.length > 0) {
     const file = input.files[0];
     const fileName = file.name;
-    const fileExtension = fileName
-      .substring(fileName.lastIndexOf("."))
-      .toLowerCase();
+    const fileExtension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
 
+    // Gestion de l'erreur de format
     if (!allowedExtensions.includes(fileExtension)) {
-      alert(
-        "Format non autorisé. Veuillez choisir un fichier .pdf, .doc, .docx ou .txt.",
-      );
-      input.value = "";
-      textSpan.textContent = "Cliquez pour ajouter votre CV";
-      textSpan.style.color = "#dc3545";
+      alert("Format non autorisé. Veuillez choisir un fichier .pdf, .doc, .docx ou .txt.");
+      input.value = ""; // On vide l'input
+      textSpan.textContent = texteParDefaut; // On remet le texte par défaut
+      textSpan.style.color = "#dc3545"; // Rouge erreur
       dropZone.classList.remove("has-file");
-      icon.classList.remove("fa-file-pdf");
-      icon.classList.add("fa-cloud-arrow-up");
+
+      // Reset de l'icône en rouge
+      icon.className = "fa-solid fa-cloud-arrow-up upload-icon";
       icon.style.color = "#dc3545";
       return;
     }
 
+    // Si tout est bon
     textSpan.textContent = fileName;
-    textSpan.style.color = "#586B33";
+    textSpan.style.color = "#586B33"; // Vert succès
     dropZone.classList.add("has-file");
 
-    icon.classList.remove("fa-cloud-arrow-up");
+    // Changement d'icône selon l'extension
+    icon.className = "fa-solid upload-icon"; // On garde les classes de base et on nettoie le reste
+
     if (fileExtension === ".pdf") {
       icon.classList.add("fa-file-pdf");
     } else if (fileExtension === ".txt") {
       icon.classList.add("fa-file-lines");
     } else {
-      icon.classList.add("fa-file-word");
+      icon.classList.add("fa-file-word"); // Pour .doc et .docx
     }
     icon.style.color = "#586B33";
+
   } else {
-    textSpan.textContent = "Cliquez pour ajouter votre CV";
+    // Cas où l'utilisateur annule la fenêtre de sélection
+    textSpan.textContent = texteParDefaut;
     textSpan.style.color = "#333";
     dropZone.classList.remove("has-file");
-    icon.classList.remove("fa-file-pdf", "fa-file-word", "fa-file-lines");
-    icon.classList.add("fa-cloud-arrow-up");
+
+    // Reset de l'icône
+    icon.className = "fa-solid fa-cloud-arrow-up upload-icon";
     icon.style.color = "#586B33";
   }
 }
@@ -502,6 +528,7 @@ async function chargerDetailsOffre() {
       return;
     }
 
+    // 1. Récupération des détails de l'offre
     const response = await fetch(`/api/offres/${idOffre}`);
     const data = await response.json();
 
@@ -513,12 +540,9 @@ async function chargerDetailsOffre() {
 
       // On remplit le HTML
       document.getElementById("detail-titre").textContent = offre.titre_offre;
-      document.getElementById("detail-entreprise").textContent =
-        offre.nom_entreprise;
-      document.getElementById("detail-ville").textContent =
-        offre.ville || "Non spécifiée";
-      document.getElementById("detail-dates").textContent =
-        `${dateDebut} au ${dateFin}`;
+      document.getElementById("detail-entreprise").textContent = offre.nom_entreprise;
+      document.getElementById("detail-ville").textContent = offre.ville || "Non spécifiée";
+      document.getElementById("detail-dates").textContent = `${dateDebut} au ${dateFin}`;
       document.getElementById("detail-mission").textContent = offre.mission;
       document.getElementById("detail-tuteur").textContent = offre.tuteur_nom;
 
@@ -537,33 +561,51 @@ async function chargerDetailsOffre() {
           // Cas 1 : Visiteur non connecté
           btnPostuler.textContent = "Connectez-vous pour postuler";
           btnPostuler.style.backgroundColor = "#111"; // Noir au lieu de vert
-          btnPostuler.onclick = () =>
-            (window.location.href = "/connexion.html");
+          btnPostuler.onclick = () => (window.location.href = "/connexion.html");
+
         } else if (data.role !== "etudiant") {
           // Cas 2 : Entreprise ou Admin
           btnPostuler.textContent = "Réservé aux étudiants";
           btnPostuler.style.backgroundColor = "#ccc";
           btnPostuler.style.cursor = "not-allowed";
           btnPostuler.onclick = null; // Désactive le clic
-        } else if (data.hasApplied) {
-          // Cas 3 : Étudiant qui a DÉJÀ postulé
-          btnPostuler.innerHTML =
-            '<i class="fa-solid fa-check"></i> Vous avez déjà postulé';
-          btnPostuler.style.backgroundColor = "#888"; // Gris
-          btnPostuler.style.cursor = "not-allowed";
-          btnPostuler.onclick = null; // Désactive le clic
+
         } else {
-          // Cas 4 : Étudiant qui n'a pas encore postulé
-          btnPostuler.textContent = "Postuler maintenant";
-          btnPostuler.style.backgroundColor = "#586b33";
-          btnPostuler.style.cursor = "pointer";
-          btnPostuler.onclick = ouvrirModal; // Ouvre la modale
+          // Cas 3 & 4 : Étudiant connecté -> On vérifie s'il a déjà postulé via la nouvelle route
+          try {
+            const resStatut = await fetch(`/api/offres/${idOffre}/candidature-statut`);
+            const statutData = await resStatut.json();
+
+            if (statutData.success && statutData.aPostule) {
+              // Cas 3 : L'étudiant a DÉJÀ postulé
+              const dateFormatee = new Date(statutData.date_candidature).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              });
+
+              btnPostuler.innerHTML = `<i class="fa-solid fa-check"></i> Postulé le ${dateFormatee}`;
+              btnPostuler.style.backgroundColor = "#888"; // Gris
+              btnPostuler.style.cursor = "not-allowed";
+              btnPostuler.onclick = null; // Désactive le clic
+
+            } else {
+              // Cas 4 : Étudiant qui n'a pas encore postulé
+              btnPostuler.textContent = "Postuler maintenant";
+              btnPostuler.style.backgroundColor = "#586b33";
+              btnPostuler.style.cursor = "pointer";
+              btnPostuler.onclick = ouvrirModal; // Ouvre la modale
+            }
+          } catch (errStatut) {
+            console.error("Erreur lors de la vérification de la candidature:", errStatut);
+          }
         }
       }
 
       // On affiche le tout
       loading.style.display = "none";
       container.style.display = "flex";
+
     } else {
       loading.innerHTML = "Cette offre n'existe pas ou a été retirée.";
     }
@@ -572,6 +614,7 @@ async function chargerDetailsOffre() {
     loading.innerHTML = "Erreur lors du chargement de l'offre.";
   }
 }
+
 // On exécute la fonction au chargement de la page
 document.addEventListener("DOMContentLoaded", chargerDetailsOffre);
 
@@ -1041,6 +1084,111 @@ if (formSignalement) {
     }
   };
 }
+
+function basculerLettre() {
+  const btnChoix = document.querySelector('input[name="choix_lettre"]:checked');
+  if (!btnChoix) return;
+
+  const isTexte = btnChoix.value === "texte";
+  const champTexte = document.getElementById("lettre-texte");
+  const champFichier = document.getElementById("lettre-fichier");
+  const containerFichier = document.getElementById("container-lettre-fichier"); // On cible la div
+
+  if (isTexte) {
+    // Mode Texte
+    champTexte.style.display = "block";
+    champTexte.required = true;
+
+    // On cache le conteneur du fichier
+    containerFichier.style.display = "none";
+    champFichier.required = false;
+    champFichier.value = ""; // On vide le fichier au cas où
+  } else {
+    // Mode Fichier
+    champTexte.style.display = "none";
+    champTexte.required = false;
+    champTexte.value = ""; // On vide le texte
+
+    // On affiche le conteneur du fichier
+    containerFichier.style.display = "block";
+    champFichier.required = true;
+  }
+}
+
+// 3. Soumission du formulaire avec les fichiers (FormData)
+const formPostuler = document.getElementById("form-postuler");
+
+if (formPostuler) {
+  formPostuler.onsubmit = async (e) => {
+    e.preventDefault(); // Empêche le rechargement de la page
+
+    const msgBox = document.getElementById("msg-postuler");
+    msgBox.textContent = "⏳ Envoi de la candidature en cours...";
+    msgBox.style.color = "#888";
+
+    // Récupérer l'ID de l'offre depuis l'URL de la page
+    const urlParams = new URLSearchParams(window.location.search);
+    const idOffre = urlParams.get("id");
+
+    if (!idOffre) {
+      msgBox.textContent = "❌ Erreur : Impossible de retrouver l'offre.";
+      msgBox.style.color = "red";
+      return;
+    }
+
+    // Création de l'objet FormData (obligatoire pour envoyer des fichiers)
+    const formData = new FormData();
+    formData.append("idOffre", idOffre);
+
+    // Ajout du CV
+    const fichierCV = document.getElementById("cv-upload").files[0];
+    formData.append("cv", fichierCV);
+
+    // Ajout de la lettre de motivation selon le choix
+    const typeLettre = document.querySelector('input[name="choix_lettre"]:checked').value;
+    formData.append("type_lettre", typeLettre);
+
+    if (typeLettre === "texte") {
+      // S'il a tapé un texte, on envoie la valeur du textarea
+      formData.append("lettre_motivation", document.getElementById("lettre-texte").value);
+    } else {
+      // S'il a uploadé un PDF, on envoie le fichier
+      const fichierLettre = document.getElementById("lettre-fichier").files[0];
+      formData.append("lettre_fichier", fichierLettre);
+    }
+
+    try {
+      // ⚠️ IMPORTANT : Avec FormData, on NE MET PAS de headers {"Content-Type": "..."}
+      // Le navigateur s'en charge tout seul pour créer un "multipart/form-data" propre.
+      const response = await fetch("/api/postuler", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        msgBox.textContent = "✅ " + data.message;
+        msgBox.style.color = "green";
+
+        // On ferme la modale et on recharge la page pour griser le bouton "Postuler"
+        setTimeout(() => {
+          fermerModal();
+          window.location.reload();
+        }, 1500);
+
+      } else {
+        msgBox.textContent = "❌ " + data.message;
+        msgBox.style.color = "red";
+      }
+    } catch (error) {
+      console.error("Erreur fetch postuler :", error);
+      msgBox.textContent = "❌ Erreur de connexion au serveur.";
+      msgBox.style.color = "red";
+    }
+  };
+}
+
 
 // On lance les fonctions au chargement de la page
 document.addEventListener("DOMContentLoaded", () => {

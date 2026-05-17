@@ -190,7 +190,7 @@ async function chargerMesCandidatures() {
       data.data.forEach((candidature) => {
         // 1. Formatage de la date (ex: 15/04/2026)
         const dateCandidature = new Date(
-          candidature.date_candidature,
+          candidature.date_candidature
         ).toLocaleDateString("fr-FR");
 
         // 2. Détermination de la couleur du badge de statut
@@ -204,7 +204,23 @@ async function chargerMesCandidatures() {
           classeStatut = "status refuse"; // Rouge
         }
 
-        // 3. Création de la ligne HTML
+        // 3. Condition : Le bouton "Annuler" s'affiche UNIQUEMENT si en attente
+        let btnAnnulerHTML = "";
+        if (texteStatut === "En attente") {
+          // On passe bien id_offre au lieu de id_candidature !
+          btnAnnulerHTML = `
+            <a href="#" class="btn-cancel" onclick="annulerCandidature(${candidature.id_offre}); return false;">
+              <i class="fa-solid fa-trash"></i> Retirer
+            </a>`;
+        } else {
+          // Si traité, on affiche un petit cadenas informatif
+          btnAnnulerHTML = `
+            <span style="color: #888; font-size: 0.85rem; margin-left: 10px;">
+              <i class="fa-solid fa-lock"></i> Dossier traité
+            </span>`;
+        }
+
+        // 4. Création de la ligne HTML
         const ligneHTML = `
           <tr>
             <td><strong>${candidature.nom_entreprise}</strong></td>
@@ -213,11 +229,12 @@ async function chargerMesCandidatures() {
             <td><span class="${classeStatut}">${texteStatut}</span></td>
             <td>
               <a href="/offre-details.html?id=${candidature.id_offre}" class="btn-view">Détails</a>
+              ${btnAnnulerHTML}
             </td>
           </tr>
         `;
 
-        // 4. Injection dans le tableau
+        // 5. Injection dans le tableau
         tbody.innerHTML += ligneHTML;
       });
     } else {
@@ -226,9 +243,35 @@ async function chargerMesCandidatures() {
   } catch (error) {
     console.error(
       "Erreur de fetch lors du chargement des candidatures :",
-      error,
+      error
     );
     tbody.innerHTML = `<tr><td colspan="5" style="color: red; text-align: center;">Impossible de charger les données.</td></tr>`;
+  }
+}
+
+async function annulerCandidature(idOffre) {
+  if (!confirm("Êtes-vous sûr de vouloir retirer cette candidature ? Cette action est définitive.")) {
+    return;
+  }
+
+  try {
+    // On utilise bien la méthode DELETE
+    const response = await fetch(`/api/annuler-candidature/${idOffre}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("✅ " + data.message);
+      chargerMesCandidatures(); // Recharge le tableau instantanément
+    } else {
+      alert("❌ " + data.message);
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'annulation de la candidature :", error);
+    alert("Impossible de joindre le serveur.");
   }
 }
 

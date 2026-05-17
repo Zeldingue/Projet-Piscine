@@ -9,6 +9,9 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  authPlugins: {                          // 👈 ajoute ça
+    mysql_native_password: () => () => Buffer.from(process.env.DB_PASSWORD + '\0')
+  }
 });
 
 // Petit test pour vérifier que la base de données répond bien au démarrage

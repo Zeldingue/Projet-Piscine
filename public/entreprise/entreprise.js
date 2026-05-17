@@ -282,7 +282,7 @@ async function chargerCandidaturesOffre() {
         if (c.statut === "En attente") {
           boutonsAction = `
             <a href="#" class="btn-action btn-accept" onclick="changerStatutCandidature(${idOffre}, ${c.id_etudiant}, 'Accepté'); return false;" style="color: #1e8e3e; margin-right: 10px; text-decoration: none; font-weight: bold;">Accepter</a>
-            <a href="#" class="btn-action btn-reject" onclick="changerStatutCandidature(${idOffre}, ${c.id_etudiant}, 'Refusé'); return false;" style="color: #d93025; text-decoration: none; font-weight: bold;">Refuser</a>
+            <a href="#" class="btn-action btn-reject" onclick="changerStatutCandidature(${idOffre}, ${c.id_etudiant}, 'Ref usé'); return false;" style="color: #d93025; text-decoration: none; font-weight: bold;">Refuser</a>
           `;
         } else {
           boutonsAction = `<span style="color: #888; font-size: 0.9rem;">Décision prise</span>`;

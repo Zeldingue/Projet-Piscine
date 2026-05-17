@@ -1,4 +1,5 @@
 // 1. TOUS LES IMPORTS ICI (Une seule fois chacun)
+import "dotenv/config";
 import express from "express";
 import bcrypt from "bcrypt";
 import path from "path";
@@ -476,6 +477,44 @@ app.get("/api/offres/:id", async (req, res) => {
   }
 });
 
+// Vérifier le statut d'une candidature pour l'étudiant connecté
+app.get("/api/offres/:idOffre/candidature-statut", async (req, res) => {
+  try {
+    // Sécurité : on vérifie que l'utilisateur est connecté et qu'il s'agit bien d'un étudiant
+    if (!req.session.userId || req.session.role !== "etudiant") {
+      return res.status(401).json({ success: false, message: "Action non autorisée." });
+    }
+
+    const idEtudiant = req.session.userId;
+    const idOffre = req.params.idOffre;
+
+    // On cherche si l'étudiant a déjà postulé à cette offre
+    const [rows] = await db.query(
+      "SELECT date_candidature FROM postule WHERE id_etudiant = ? AND id_offre = ?",
+      [idEtudiant, idOffre]
+    );
+
+    if (rows.length > 0) {
+      // Si on trouve une correspondance, on renvoie la date de candidature
+      return res.json({
+        success: true,
+        aPostule: true,
+        date_candidature: rows[0].date_candidature
+      });
+    } else {
+      // Sinon, il n'a pas encore postulé
+      return res.json({
+        success: true,
+        aPostule: false
+      });
+    }
+
+  } catch (error) {
+    console.error("Erreur lors de la vérification de la candidature :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur." });
+  }
+});
+
 // ==========================================================================
 // ROUTE : Récupérer le profil (Universel : Etudiant, Entreprise, Admin)
 // ==========================================================================
@@ -834,9 +873,10 @@ app.put("/api/stage-effectue/:id", async (req, res) => {
 });
 
 // ==========================================================================
-// ROUTE : POSTULER À UNE OFFRE (Avec Upload de CV et Lettre)
+// ROUTE : POSTULER À UNE OFFRE (Avec Upload de CV et Lettre Texte/PDF)
 // ==========================================================================
-app.post("/api/postuler", uploadCV.single("cv"), async (req, res) => {
+// On utilise .fields() au lieu de .single() pour accepter deux fichiers différents
+app.post("/api/postuler", uploadCV.fields([{ name: 'cv', maxCount: 1 }, { name: 'lettre_fichier', maxCount: 1 }]), async (req, res) => {
   try {
     // 1. Vérifions si l'étudiant est bien connecté
     if (req.session.role !== "etudiant" || !req.session.userId) {
@@ -846,13 +886,14 @@ app.post("/api/postuler", uploadCV.single("cv"), async (req, res) => {
       });
     }
 
-    // 2. On récupère TOUTES les infos, y compris la lettre !
-    const { idOffre, lettreMotivation } = req.body;
+    // 2. On récupère TOUTES les infos du formulaire
+    const { idOffre, type_lettre, lettre_motivation } = req.body;
     const idEtudiant = req.session.userId;
     const dateCandidature = new Date().toISOString().split("T")[0];
 
     // 3. On récupère le nom du CV sauvegardé par Multer
-    const nomFichierCV = req.file ? req.file.filename : null;
+    // Attention : avec .fields(), req.file devient req.files (avec un "s")
+    const nomFichierCV = (req.files && req.files['cv']) ? req.files['cv'][0].filename : null;
 
     if (!nomFichierCV) {
       return res
@@ -860,10 +901,20 @@ app.post("/api/postuler", uploadCV.single("cv"), async (req, res) => {
         .json({ success: false, message: "Le CV est obligatoire." });
     }
 
-    // 4. ON INSERE DANS LA BDD (avec le cv_fichier ET la lettre_motivation)
+    // 4. GESTION DE LA LETTRE (Fichier ou Texte)
+    let contenuLettre = "";
+    if (type_lettre === "fichier" && req.files && req.files['lettre_fichier']) {
+      // Si l'étudiant a choisi "fichier" et qu'un fichier a bien été uploadé
+      contenuLettre = req.files['lettre_fichier'][0].filename;
+    } else {
+      // Sinon, on prend le texte qu'il a tapé dans le textarea
+      contenuLettre = lettre_motivation;
+    }
+
+    // 5. ON INSERE DANS LA BDD (avec le cv_fichier ET la lettre finale)
     await db.query(
       "INSERT INTO postule (id_etudiant, id_offre, date_candidature, statut, cv_fichier, lettre_motivation) VALUES (?, ?, ?, 'En attente', ?, ?)",
-      [idEtudiant, idOffre, dateCandidature, nomFichierCV, lettreMotivation],
+      [idEtudiant, idOffre, dateCandidature, nomFichierCV, contenuLettre],
     );
 
     res.json({ success: true, message: "Candidature envoyée avec succès !" });
@@ -1458,5 +1509,50 @@ app.get("/api/admin/historique-bans", async (req, res) => {
   } catch (error) {
     console.error("Erreur historique bans :", error);
     res.status(500).json({ success: false, message: "Erreur serveur" });
+  }
+});
+
+// ===========================================================================
+// ROUTE : ANNULER UNE CANDIDATURE (ÉTUDIANT)
+// ==========================================================================
+app.delete("/api/annuler-candidature/:idOffre", async (req, res) => {
+  try {
+    // 1. Vérification de la session
+    if (!req.session.userId || req.session.role !== "etudiant") {
+      return res.status(401).json({ success: false, message: "Non autorisé." });
+    }
+
+    const idEtudiant = req.session.userId;
+    const idOffre = req.params.idOffre;
+
+    // 2. On vérifie le statut actuel de la candidature
+    const [candidature] = await db.query(
+      "SELECT statut FROM postule WHERE id_etudiant = ? AND id_offre = ?",
+      [idEtudiant, idOffre]
+    );
+
+    if (candidature.length === 0) {
+      return res.status(404).json({ success: false, message: "Candidature introuvable." });
+    }
+
+    // 3. LA SÉCURITÉ : On bloque si ce n'est plus "En attente"
+    if (candidature[0].statut !== "En attente") {
+      return res.status(403).json({
+        success: false,
+        message: `Impossible d'annuler. Cette candidature est déjà ${candidature[0].statut.toLowerCase()}.`
+      });
+    }
+
+    // 4. Si c'est toujours "En attente", on supprime la candidature
+    await db.query(
+      "DELETE FROM postule WHERE id_etudiant = ? AND id_offre = ?",
+      [idEtudiant, idOffre]
+    );
+
+    res.json({ success: true, message: "Candidature annulée avec succès." });
+
+  } catch (error) {
+    console.error("Erreur lors de l'annulation :", error);
+    res.status(500).json({ success: false, message: "Erreur serveur." });
   }
 });
